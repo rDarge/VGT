@@ -8,7 +8,7 @@ const FirstInitModal = () => {
   const [openaiApiKey, setOpenaiApiKey] = useState('');
   const [isApiKeyValid, setIsApiKeyValid] = useState(true);
 
-  //Al cerrar el model, independiente de la razón,emitimos un evento para indicar que el ya se ha concretado el paso por el primer inicio
+  //When closing the model, regardless of the reason, we emit an event to indicate that the steps through the first start have been completed
   useEffect(() => {
     if (!firstModelOpen) {
       ipcRenderer.send('setFirstInitReady', true);
@@ -30,25 +30,25 @@ const FirstInitModal = () => {
     return;
   };
 
-  //Al hacer click en Save API Key
+  //When a user clicks "Save API Key"
   const onSetApiKey = async () => {
     const config = {};
-    //Validamos de forma sincrona la Key
-    //En caso de dejar
+    //Synchronously validate the key
     if (openaiApiKey.trim() !== '') {
       const isValid = await ipcRenderer.invoke('checkApiKey');
       if (isValid) {
         setIsApiKeyValid(true);
         config['openaiApiKey'] = openaiApiKey.trim();
 
-        //Enviamos evento a main con las configs
-        //En este casos olo enviamos la propiedad "openaiApiKey"
+        //Send configuration update to the main thread
+        //In this case we only send the property "openaiApiKey"
         ipcRenderer.send('setConfig', config);
 
-        //Cerrar modal
+        //Close the modal
         setFirstModalOpen(false);
       }
     }
+    //TODO: should this be exceptional?
     setIsApiKeyValid(false);
     return;
   };

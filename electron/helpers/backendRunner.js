@@ -6,17 +6,17 @@ const {
 let workers = [];
 
 /**
- * Inicia y gestiona el backend en Python
+ * Start and manage the Python backend
  */
 async function initBackend() {
   if (process.env.NODE_ENV === 'development') {
-    //Si usamos uvvicorn debemos ejecutar de esta manera python pero debemos ejecutar "poetry shell" manualmente antes de poder trabajar en el proyecto
+    //If we use uvicorn we must run python like this but we need to run "poetry shell" manually before we can wokr on the project
     const pythonProcess = spawn('python', ['./backend/main.py'], {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
     });
 
-    //Podemos usar poetry aquí si es que se user Hypercorn en el back. Esto asegura que los procesos mueran en los momentos correspondientes
+    //We can use poetry here if Hypercorn is used in the back. This ensures that processes die at the appropriate times.
     /*
     const pythonProcess = spawn(
       'poetry',
@@ -33,19 +33,19 @@ async function initBackend() {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
     });
-    //TODO: Investigar como se comporta esto en prod
+    //TODO: Investigate how this works in prod
     workers.push(pythonProcess);
   }
 
   workers[0].stdout.on('data', (outdata) => {
     const data = outdata.toString();
     console.log(data);
-    handleBackendTerminal(data); //Pasamos el string de caracteres para ser enviados a front en caso de ser necesario
+    handleBackendTerminal(data); //Pass the string of characters to be sent to the front if necessary
   });
   workers[0].stderr.on('data', (outdata) => {
     const data = outdata.toString();
     console.log(data);
-    handleBackendTerminal(data); //Pasamos el string de caracteres para ser enviados a front en caso de ser necesario
+    handleBackendTerminal(data); //Pass the string of characters to be sent to the front if necessary
   });
   workers[0].on('error', (err) => {
     console.log('on error');

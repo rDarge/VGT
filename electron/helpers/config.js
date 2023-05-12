@@ -2,7 +2,7 @@ const Store = require('electron-store');
 
 const store = new Store();
 
-//Set de configuraciones iniciales
+//Set the initial configurations
 const defaultPrompt = 'Translate this text from Japanese to English:';
 
 const defaultOpenAiModel = {
@@ -32,7 +32,7 @@ const defaultConfigsValues = {
   selectedOpenAiModel: defaultOpenAiModel.fullname,
 };
 
-//Realiza una carga inicial de todas las configuraciones cuando se inicia el programa por primera vez.
+//Performs an initial load of all settings when the program is first started
 function checkInitialConfig() {
   const basePrompt = store.get('basePrompt');
   if (!basePrompt) {
@@ -68,10 +68,10 @@ function checkInitialConfig() {
   }
 }
 
-//Recupera todas las configuraciones
+//Retrieve all settings
 function getFullConfigs() {
   return {
-    openaiApiKey: store.get('openaiApiKey') || '', //Retornamos un string vació en caso de no tener key
+    openaiApiKey: store.get('openaiApiKey', ''),
     basePrompt: store.get('basePrompt'),
     screenshotModifierKey: store.get('screenshotModifierKey'),
     screenshotLetterKey: store.get('screenshotLetterKey'),
@@ -81,16 +81,16 @@ function getFullConfigs() {
   };
 }
 
-//Retorna las configuraciones necesarias por el back de Python para realizar sus operaciones
+//Returns the configurations necessary for the Python backend to operate
 function getQueryConfig() {
   return {
-    openaiApiKey: store.get('openaiApiKey') || '', //Retornamos un string vació en caso de no tener key
+    openaiApiKey: store.get('openaiApiKey', ''), 
     basePrompt: store.get('basePrompt'),
-    selectedOpenAiModel: getSelectedOpenAiModelProprieties(), //Retorna las configuraciones completas del modelo seleccionado
+    selectedOpenAiModel: getSelectedOpenAiModelProprieties(), 
   };
 }
 
-//Retorna la configuración relacionada a la combinación de teclas para la ejecución de la captura de pantallas
+//Returns the screen capture shortcut configuration
 function getShortcutConfig() {
   return {
     screenshotModifierKey: store.get('screenshotModifierKey'),
@@ -98,12 +98,12 @@ function getShortcutConfig() {
   };
 }
 
-//Guarda nuevas configuraciones
-//Estas deben existir y ser distintas a las actualmente guardadas
+//Save updated configurations
+//These must exist and must be different from the current settings
 function saveConfig(newConfigs) {
   const currentsConfigs = getFullConfigs();
 
-  //Aceptamos, en caso de la Key, guardar un string vació
+  //Allow the API key to be cleared
   if (newConfigs.openaiApiKey || newConfigs.openaiApiKey === '') {
     if (newConfigs.openaiApiKey !== currentsConfigs.openaiApiKey) {
       store.set('openaiApiKey', newConfigs.openaiApiKey);
@@ -141,7 +141,7 @@ function saveConfig(newConfigs) {
   }
 }
 
-//Reinicia las configuraciones a las guardadas por defecto
+//Reset the settings back to initial values
 function resetConfig() {
   store.delete('openaiApiKey');
   store.set('basePrompt', defaultConfigsValues.basePrompt);
@@ -155,38 +155,31 @@ function resetConfig() {
   store.set('selectedOpenAiModel', defaultConfigsValues.selectedOpenAiModel);
 }
 
-//Retorna las propiedades del modelo de OpenAi seleccionado
 function getSelectedOpenAiModelProprieties() {
   return store
     .get('openIaModels')
     .find((e) => e.fullname === store.get('selectedOpenAiModel'));
 }
 
-//Reinicia la opción "primer inicio" para pasar por el proceso de primer inicio nuevamente
+//Reset the "first boot" option to go through the first boot process again.
 function resetFirstInit() {
   store.set('firstInitReady', false);
 }
 
-//Para marcar el primer inicio como completado
 function setFirstInitReady(status) {
   store.set('firstInitReady', status);
 }
 
-//Obtenemos el estado del primer inicio
-//Por defecto el primer inicio aun no se ha realizado (false)
 function getFirstInitReady() {
-  return store.get('firstInitReady') || false;
+  return store.get('firstInitReady', false);
 }
 
-//Para cambiar el estado de la secuencia inicial de verificación del modelo
 function setInitModelSequenceReady(status) {
   store.set('initModelSequenceReady', status);
 }
 
-//Para obtener el estado de la secuencia inicial de verificación del modelo
-//Por defecto la verificación no ha terminado (false)
 function getInitModelSequenceReady() {
-  return store.get('initModelSequenceReady') || false;
+  return store.get('initModelSequenceReady', false);
 }
 
 module.exports = {

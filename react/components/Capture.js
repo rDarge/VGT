@@ -3,7 +3,7 @@ const { ipcRenderer } = require('electron');
 
 const Capture = () => {
   useEffect(() => {
-    console.log('Capture Cargado');
+    console.log('Capture Loaded');
   }, []);
 
   const canvasRef = useRef(null);
@@ -15,7 +15,7 @@ const Capture = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Establecer el color de fondo en azul transparente
+    ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Set the background color to transparent blue
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, []);
 
@@ -25,7 +25,7 @@ const Capture = () => {
 
     function drawRectangle() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Establecer el color de fondo en azul transparente
+      ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Set the background color to transparent blue
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.clearRect(
         startCoords.x,
@@ -53,7 +53,7 @@ const Capture = () => {
     });
   }
 
-  //Todo si el ratón sale del rango del canvas (ejemplo a otra pantalla o a la barra de navegación) debemos detener el proceso de captura
+  //TODO: If the mouse leaves the range of the canvas (to another screen or the navbar) we must stop the capture process
   function handleMouseMove(event) {
     if (!isDrawing) return;
     setEndCoords({
@@ -65,7 +65,7 @@ const Capture = () => {
   const handleMouseUp = async () => {
     ipcRenderer.send('event/mouseup');
     setIsDrawing(false);
-    //TODO, poner algún icono de carga ?
+    //TODO: Put some sort of loading icon?
     await ipcRenderer.invoke('captureScreenshot');
     ipcRenderer.send('closeCaptureWin');
   };

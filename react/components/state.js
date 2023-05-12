@@ -3,9 +3,9 @@ import { createGlobalState } from 'react-hooks-global-state';
 const initialState = {
   entries: {},
   config: {},
-  firstInitReady: true, //Por defecto asumimos que el usuario ya paso por el primer inicio
-  initModelSequenceReady: false, //Por defecto asumimos que el modelo no esta cargado en disco
-  backendTerminalStreaming: [], //Para almacenar un buffer con el output de la terminal del backend
+  firstInitReady: true, //By default we assume the user has already completed the first start
+  initModelSequenceReady: false, //By default we assume that the model is not loaded on the disk
+  backendTerminalStreaming: [], //To buffer the output of the backend terminal
 };
 const { setGlobalState, useGlobalState } = createGlobalState(initialState);
 
@@ -57,7 +57,7 @@ export const updateBackendTerminalStreaming = (line) => {
   setGlobalState('backendTerminalStreaming', (oldEntries) => {
     const newArrObj = [...oldEntries];
     if (newArrObj.length > 100) {
-      //Solo almacenamos las ultimas 100 lineas de la terminal
+      //Only store the last 100 lines of the terminal
       newArrObj.shift();
     }
     newArrObj.push(line);

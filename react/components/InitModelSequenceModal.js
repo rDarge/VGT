@@ -7,9 +7,9 @@ const { Paragraph } = Typography;
 const InitModelSequenceModal = () => {
   const [backendTerminalStreaming] = useGlobalState('backendTerminalStreaming');
 
-  const paragraphRef = useRef(); //Referencia para mover pragmáticamente la barra de scroll
+  const paragraphRef = useRef(); //Reference to programmatically move the scrollbar
 
-  //Para mantener la barra siempre en la parte inferior
+  //To keep the viewport focused on the bottom
   useEffect(() => {
     const paragraphElement = paragraphRef.current;
     if (paragraphElement) {
@@ -18,7 +18,7 @@ const InitModelSequenceModal = () => {
     }
   }, [backendTerminalStreaming]);
 
-  //Escribimos cada linea recibida
+  //Write each line received
   const renderTerminal = () => {
     const aux = [];
     backendTerminalStreaming.forEach((line) => {

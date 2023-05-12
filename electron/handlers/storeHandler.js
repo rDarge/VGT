@@ -3,13 +3,13 @@ const { addImgToProcess, addTextToTraduction } = require('./queueHandler');
 const EventEmitter = require('events');
 
 /**
- * Estructura del objeto que guardamos para cada input de traducción
+ * Structure of the object that we save for each translation input
  * "1234": {
- *      id: "123" --> id única UUID
- *      img: "", --> Imagen en DataURL Base64
- *      text: "", --> Texto detectado
- *      trad: "" --> Texto traducido
- *      selectedModel: {} --> Configuraciones del Modelo seleccionado al momento de la captura
+ *      id: "123" --> Unique UUID
+ *      img: "", --> Image in Base64 DataURL
+ *      text: "", --> Detected Text
+ *      trad: "" --> Translated Text
+ *      selectedModel: {} --> Configurations of the model selected at the time of capture
  * }
  */
 
@@ -25,7 +25,6 @@ function deleteItemById(id) {
   eventEmitter.emit('entryDeleted', id);
 }
 
-//Añade una nueva entrada
 function addNewEntry(imgObj) {
   console.log('Guardando nueva imagen');
   imgObj['text'] = null;
@@ -34,50 +33,48 @@ function addNewEntry(imgObj) {
   eventEmitter.emit('newEntryAdded', imgObj);
 }
 
-//Añade un texto a una imagen almacenada
 function addTextToImg(textObj) {
   console.log('Guardando texto detectado');
   items[textObj.id]['text'] = textObj.text;
   eventEmitter.emit('newText', textObj);
 }
 
-//Añade la traducción a una imagen y texto almacenado
 function addTraductionToImg(tradObj) {
   console.log('Guardando texto traducido');
   items[tradObj.id]['trad'] = tradObj.trad;
   eventEmitter.emit('newTrad', tradObj);
 }
 
-//Si se añade una nueva imagen, la enviamos a front para añadirla a la lista
-//Luego la añadimos a la lista para su procesamiento en el OCR
+//If a new image is added, send it to the frontend and add it to the list
+//Then add it to the list for OCR processing
 eventEmitter.on('newEntryAdded', (imgObj) => {
-  //Enviar a la pantalla principal TODO, Optimizar para reducir iteración ?
+  //Send it to the main screen TODO: Optimize to reduce iteration?
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'Visual-GPT-Translator') {
       win.webContents.send('newEntry', imgObj);
     }
   });
 
-  //Inicia proceso de OCR
+  //Start OCR process
   addImgToProcess(imgObj, addTextToImg);
 });
 
-//Cuando una imagen ya ha pasado por el OCR
+//When an image has gone through OCR
 eventEmitter.on('newText', (textObj) => {
-  //Enviar a la pantalla principal TODO, Optimizar para reducir iteración ?
+  //Send to the main screen TODO: Optimize to reduce iteration?
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'Visual-GPT-Translator') {
       win.webContents.send('addText', textObj);
     }
   });
 
-  //Inicia proceso de traduccion
+  //Start translation process
   addTextToTraduction(textObj, addTraductionToImg);
 });
 
-//Cuando una imagen ya tiene su texto y traduccion
+//When an image has its text and translation
 eventEmitter.on('newTrad', (tradObj) => {
-  //Enviar a la pantalla principal TODO, Optimizar para reducir iteración ?
+  //Send to the main screen TODO: Optimize to reduce iteration?
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'Visual-GPT-Translator') {
       win.webContents.send('addTrad', tradObj);
@@ -85,9 +82,9 @@ eventEmitter.on('newTrad', (tradObj) => {
   });
 });
 
-//Cuando se elimina una entrada
+//When an entry is removed
 eventEmitter.on('entryDeleted', (entryId) => {
-  //Enviar a la pantalla principal TODO, Optimizar para reducir iteración ?
+  //Send to the main screen TODO: Optimize to reduce iteration?
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'Visual-GPT-Translator') {
       win.webContents.send('entryDeleted', entryId);

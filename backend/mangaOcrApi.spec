@@ -4,7 +4,7 @@ from PyInstaller.utils.hooks import copy_metadata
 from PyInstaller.utils.hooks import collect_submodules
 
 datas = []
-# datas += collect_data_files('torch') #No es necesario al parecer
+# datas += collect_data_files('torch') #Not necessary
 datas += collect_data_files('unidic_lite')
 datas += collect_data_files('manga_ocr')
 datas += copy_metadata('torch')
@@ -17,11 +17,11 @@ datas += copy_metadata('numpy')
 datas += copy_metadata('tokenizers')
 
 hiddenimports = []
-hiddenimports += collect_submodules('uvicorn') #Cargamos los elementos de uvicorn de manera manual
-#hiddenimports += collect_submodules('hypercorn') #¿sera necesario en caso de usar hypercorn?
-hiddenimports += ['app'] #Analizamos el archivo app.py por mas dependencias
+hiddenimports += collect_submodules('uvicorn') # Loaded manually
+#hiddenimports += collect_submodules('hypercorn') # Maybe necessary if we use hypercorn?
+hiddenimports += ['app'] #Analyze app.py for additional dependencies
 
-# Cargamos archivos estaticos
+# Load static files
 added_files = [
   ('./img', './img')
 ]
@@ -33,7 +33,7 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=datas + added_files,
-    hiddenimports=hiddenimports, # hiddenimports=['pytorch'], #Al parecer tampoco necesario
+    hiddenimports=hiddenimports, # hiddenimports=['pytorch'], #Not necessary
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -45,7 +45,7 @@ a = Analysis(
 )
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-#Reducimos tamañao limpando .dll y .lib de Torch que al parecer no necesitamos
+#Reduce size by excluding non-necessary libraries
 PATH_TO_TORCH_LIB = "torch\\lib\\"
 excluded_files  = [
   'asmjit.lib', 
@@ -79,7 +79,7 @@ excluded_files  = [
 excluded_files = [PATH_TO_TORCH_LIB + x for x in excluded_files]
 a.datas = [x for x in a.datas if not x[0] in excluded_files]
 
-#Nos aseguramos de no incluir paquetes que son meramente de desarrollo
+#Exclude packages that are only in development
 exclude = ["pastel", "tomli", "poethepoet"]
 a.binaries = [x for x in a.binaries if not x[0].startswith(tuple(exclude))]
 

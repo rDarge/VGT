@@ -13,17 +13,16 @@ import signal
 import openai
 import json
 
-# Proceso encargado de verificar de matar al worker de FastApi en caso que deje de existir electron.exe (o VGT.exe)
-# Este proceso se auto-mata en caso que el proceso padre deje de existir
-# La verificación se realiza cada 2 segundos
-
+# Process in charge of stopping the FastApi worker in case electron.exe (or VGT.exe) ceases to exist. 
+# This process self-terminates in case the parent process ceases to exist. 
+# The check is carried out every 2 seconds.
 
 def watcher(parent_pid):
     while True:
         info = []
         parentRunning = False
         for proc in psutil.process_iter():
-            # TODO: Usar "electron.exe" para dev y "VGT.exe" para prod
+            # TODO: Use "electron.exe" for dev and "VGT.exe" for prod
             if proc.name() == "electron.exe" or proc.name() == "VGT.exe":
                 info.append(str(proc))
             if proc.pid == parent_pid:
@@ -31,7 +30,7 @@ def watcher(parent_pid):
         if parentRunning is False:
             raise SystemExit
         if (len(info) == 0):
-            # Aunque esta instrucción termina el proceso correctamente es considerado un error a nivel asyncio
+            # Although this instruction terminates the process correctly, it is considered an asyncio-level error.
             os.kill(parent_pid, signal.SIGTERM)
             raise SystemExit
         time.sleep(1)
@@ -41,17 +40,17 @@ app = FastAPI()
 
 mocr = None
 
-# Vemos si tenemos un argumento de entrada para identificar que queremos correr el backend sin que electron este presente
+# Supply "standalone" as a command line argument to run without the corresponding electron task
 standalone = False
 if len(sys.argv) == 2:
     if sys.argv[1] == "standalone":
         standalone = True
 
-# Al iniciar FastApi generamos un proceso hijo al cual le pasamos el pid del padre (o sea, este proceso)
-# Este proceso hijo estar encargado de verificar que electron este siendo ejecutado, en caso de no estarlo, este proceso esta encargado de matar el padre (o sea, este proceso)
-# Esta lógica solo se aplica cuando estamos corriendo backend en modo *no* standalone
-# Esta solución se debería aplicar dado el problema de procesos de python huérfanos generados cuando la aplicación principal se cierra en algunas condiciones especiales
-# Estos procesos huérfanos no se terminan y bloquean la capacidad de volver a ejecutar la aplicación
+# When starting FastApi we generate a child process to which we pass the parent's pid (that is, this process)
+# This child process will be in charge of verifying that electron is being executed, if it is not, this process is in charge of killing the parent (that is, this process).
+# This logic only applies when we are running the backend in *no* standalone mode.
+# This solution should be applied given the problem of orphaned python processes spawned when the main application is closed under some special conditions
+# These orphaned processes are not terminated and block the ability to run the application again
 if standalone is False:
     @app.on_event("startup")
     def watchElectron():
@@ -71,14 +70,14 @@ def model_check():
     hf_cache_info = scan_cache_dir()
     for repo in hf_cache_info.repos:
         if repo.repo_id == "kha-white/manga-ocr-base":
-            # Ojo: Especificamos no solo que exista por lo menos una revision, sino que también existan 6 o mas archivos. Esto es en caso de descargas interrumpidas
+            # Note: We specify not only that there is at least one revision, but also that there are 6 or more files. This is in case of interrupted downloads
             if len(repo.revisions) > 0 and repo.nb_files >= 6:
                 return "inDisk"
     return "notInDisk"
 
 
-# Inicia el proceso de carga MangaOcr
-# Bug conocido: si en dev se interrumpe el proceso de descarga, queda un proceso de python que no permite reiniciar el sistema
+# Start the MangaOcr loading process
+# Known bug: if the download process is interrupted in dev, there is a python process that does not allow a reboot
 @app.post("/loadMangaOCR")
 def load_manga_ocr():
     print("loadMangaOCR")
@@ -135,8 +134,7 @@ async def translate_text(data: dict):
         else:
             return {"id": data["id"], "trad": ""}
 
-# Nos retorna una texto detectado de una imagen de muestra mediante el uso de Manga OCR
-
+# Returns a text detected from a sample image using Manga OCR
 
 @ app.get("/test")
 def test():
@@ -144,23 +142,23 @@ def test():
     global mocr
     if mocr is None:
         return {"msg": "Manga OCR not Ready"}
-    # TODO: Esta Path es un problme, ya que funciona en dev pero no en prod
+    # TODO: This Path is a problem, as it works in dev but not in prod
     text = mocr('backend/img/00.jpg')
     return {"Test": text}
 
 
-# Requiere cargar el modelo nuevamente luego de realizar la limpieza
+# Requires loading the model again after cleaning
 @ app.post("/cleanMangaOCRCache")
 def clean_manga_orc_cache():
     print("cleanMangaOCRCache")
     global mocr
     hf_cache_info = scan_cache_dir()
     for repo in hf_cache_info.repos:
-        if repo.repo_id == "kha-white/manga-ocr-base":  # Solo eliminamos revisiones del modelo de manga-ocr
+        if repo.repo_id == "kha-white/manga-ocr-base":  # We only remove revisions from the manga-ocr model
             for revision in repo.revisions:
                 scan_cache_dir().delete_revisions(revision.commit_hash).execute()
     mocr = None
-    return {"msg": "Manga OCR cache model delete"}
+    return {"msg": "Manga OCR cache model deleted"}
 
 
 @ app.get("/ping")

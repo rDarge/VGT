@@ -12,41 +12,39 @@ import {
   updateBackendTerminalStreaming,
 } from './state';
 
-//TODO: Tener un sistema para validar si el back esta listo para funcionar
-//TODO: Añadir explicaciones de como usar el sistema
 const App = () => {
-  //Mapeo de eventos desde main a estados de React
+  //Main to React event bridge
   useEffect(() => {
-    //Cuando main tiene una nueva entrada (imagen)
+    //When there is a new entry (image) received in the main thread
     ipcRenderer.on('newEntry', (e, newEntry) => {
       addNewEntry(newEntry);
     });
-    //Cuando se elimina una entrada
+    //When an entry is deleted
     ipcRenderer.on('entryDeleted', (e, entryId) => {
       deleteEntry(entryId);
     });
-    //Cuando main tiene un nuevo texto detectado de una imagen
+    //When the main thread has detected text for an image
     ipcRenderer.on('addText', (e, newText) => {
       addText(newText);
     });
-    //Cuando main tiene la traducción de un texto lista
+    //When the main thread has a new translation ready
     ipcRenderer.on('addTrad', (e, newTrad) => {
       addTrad(newTrad);
     });
-    //Cuando main ha cambiado las configuraciones guardadas
+    //When the main thread has changed the saved settings
     ipcRenderer.on('refreshConfig', (e, config) => {
       updateConfig(config);
     });
-    //Cuando main ha terminado de verificar la carga del modelo nos avisa por este evento que todo esta OK
+    //When the main thread has notified us that the model is loaded
     ipcRenderer.on('initModelSequenceReady', (e) => {
       updateInitModelSequenceReady(true);
     });
-    //Cuando main nos quiere trasmitir datos de la terminal del backend, nos envía las lineas de texto por aca
+    //When the main thread wants to transmit data to the backend, those lines flow through here
     ipcRenderer.on('backendTerminalStreaming', (e, line) => {
       updateBackendTerminalStreaming(line);
     });
 
-    //Al inicia vemos si main ya ha realizado la comprobación inicial del modelo
+    //In the beginning we will see if the main thread has already performed the initial model check
     async function getInitModelSequenceReady() {
       const initModelSequenceReady = await ipcRenderer.invoke(
         'getInitModelSequenceReady',
@@ -55,14 +53,14 @@ const App = () => {
     }
     getInitModelSequenceReady();
 
-    //Al iniciar nos aseguramos de cargar las configuraciones de main
+    //When starting we make sure to load the configurations from the main thread
     async function syncConfig() {
       const currentConfig = await ipcRenderer.invoke('getConfig');
       updateConfig(currentConfig);
     }
     syncConfig();
 
-    //Al iniciar vemos si estamos ante el primer inicio del sistema
+    //When starting we check to see if we are ready before the main thread 
     async function getFirstInitReady() {
       const firstInitReady = await ipcRenderer.invoke('getFirstInitReady');
       updateFirstInitReady(firstInitReady);

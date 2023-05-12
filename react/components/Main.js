@@ -11,13 +11,13 @@ import { useGlobalState } from './state';
 import { GithubOutlined } from '@ant-design/icons';
 
 const Main = () => {
-  //El Menu, Footer y el uso de un fondo para el contenido solo lo usamos en caso que la ruta cargada no sea /capture, ya que esa tiene una forma especial de ser aplicada
-  //TODO: Mejorar el código respecto a lo anterior
+  //The Menu, Footer and the use of a background for the content are only used in case the route loaded is not /capture, since that has a special way of being applied
+  //TODO: Improve the code compared to above
 
   const [firstInitReady] = useGlobalState('firstInitReady');
   const [initModelSequenceReady] = useGlobalState('initModelSequenceReady');
 
-  // Solo hacer render si la secuencia de comprobación inicial del modelo *no* esta lista
+  // Only render if the initial model check is *not* ready
   const renderInitModelSequenceModal = () => {
     if (!initModelSequenceReady) {
       return <InitModelSequenceModal />;
@@ -25,8 +25,8 @@ const Main = () => {
     return null;
   };
 
-  // Solo hacer render si no hemos pasado por el firstInit
-  // Esto se aplica solo si ya terminamos de comprobar el modelo en la secuencia inicial
+  // Only render if we have not completed the firstInit
+  // This applies only if we have already finished checking the model in the initial sequence
   const renderFirstInitModal = () => {
     if (initModelSequenceReady && !firstInitReady) {
       return <FirstInitModal />;

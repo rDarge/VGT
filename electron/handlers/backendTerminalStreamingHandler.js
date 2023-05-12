@@ -3,9 +3,9 @@ const { BrowserWindow } = require('electron');
 function handleBackendTerminal(data) {
   let line = data.trim();
 
-  //En caso que la linea parta con "Downloading", usamos procesamos el texto para enviar una linea al front
-  //Esta linea es dibujada en el front.
-  //Actualmente esto se hace para informar sobre el estado de descarga del modelo
+  //In case the line starts with "Downloading", we preprocess the text to format it for display on the frontend
+  //This line is shown first
+  //Currently this is done to report on the download status of the model
   if (line.includes('Downloading')) {
     let aux = line
       .replace('Downloading', '...')
@@ -15,7 +15,7 @@ function handleBackendTerminal(data) {
     aux = aux.split('[');
     aux = aux[0] + '[' + aux[1].split(',')[1].replace(' ', '');
 
-    //Enviamos el string a front
+    //Send the string to the frontend
     BrowserWindow.getAllWindows().forEach((win) => {
       if (win.title === 'Visual-GPT-Translator') {
         win.webContents.send('backendTerminalStreaming', aux);

@@ -3,7 +3,7 @@ const url = require('url');
 const { BrowserWindow } = require('electron');
 
 function createMainWindow() {
-  //Instancia ventana
+  //Window instance
   let mainWindow = new BrowserWindow({
     title: 'Visual-GPT-Translator',
     width: 1100,
@@ -19,9 +19,8 @@ function createMainWindow() {
     },
   });
 
-  //Genera elemento a cargar en la ventana dado el ambiente de ejecución
-  //Usamos hash para indicar la ruta que debe ser ejecutada en el contenido
-  //Ojo que en el path.join usamos ".." para llegar correctamente al .html
+  //Load the appropriate window per the execution environment
+  //Use hash to indicate the path that should be executed in the context
   let indexPath;
   if (process.env.NODE_ENV === 'development') {
     indexPath = url.format({
@@ -40,20 +39,17 @@ function createMainWindow() {
     });
   }
 
-  //Evita que el nombre de la ventana sea cambiado por React
+  //Prevent window name from being changed by react
   mainWindow.on('page-title-updated', function (e) {
     e.preventDefault();
   });
 
-  //Carga contenido de ventana
   mainWindow.loadURL(indexPath);
 
-  //Mostramos la ventana cuando esta todo listo
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
 
-  //En caso de ser cerrada, eliminamos la ventana y cerramos el programa
   mainWindow.on('closed', () => {
     mainWindow = null;
   });

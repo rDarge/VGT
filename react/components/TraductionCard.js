@@ -5,7 +5,7 @@ import { DeleteOutlined } from '@ant-design/icons';
 
 const TraductionCard = ({ entry }) => {
 
-  //Al hacer click en el botón de eliminar
+  //When the "delete" button is clicked
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
   };

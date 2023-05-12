@@ -15,7 +15,7 @@ import {
 import { FormOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useGlobalState } from './state';
 
-//TODO: Opción para eliminar el modelo del cache (cerrar programa ?)
+//TODO: Add an option to delete the model from the cache
 
 const apiKeyHelp = (
   <div style={{ maxWidth: '300px' }}>
@@ -52,27 +52,27 @@ const basePromptHelp = (
 const Config = () => {
   const [config] = useGlobalState('config');
 
-  const [loading, setLoading] = useState(true); //Determina si ya tenemos las configuraciones cargadas de main
+  const [loading, setLoading] = useState(true); //Determines if we have already loaded the configurations from the main thread
   const [openaiApiKey, setOpenaiApiKey] = useState('');
-  const [basePromptOptions, setBasePromptOptions] = useState([]); //Listado de prompt para el dropdown
-  const [usePrebuildPrompt, setUsePrebuildPrompt] = useState(true); //True en caso que el valor de "basePrompt" se encuentre en el listado de "basePromptOptions"
-  const [basePrompt, setBasePrompt] = useState(null); //Valor de prompt seleccionado del dropdown
-  const [customBasePrompt, setCustomBasePrompt] = useState(''); //Valor personalizado de prompt
+  const [basePromptOptions, setBasePromptOptions] = useState([]); //Dropdown prompt list
+  const [usePrebuildPrompt, setUsePrebuildPrompt] = useState(true); //True if the value of "basePrompt" is found in the list of "basePromptOptions"
+  const [basePrompt, setBasePrompt] = useState(null); //Selected dropdown prompt value
+  const [customBasePrompt, setCustomBasePrompt] = useState(''); //Prompt custom value
   const [screenshotModifierKey, setScreenshotModifierKey] = useState('Ctrl');
   const [screenshotLetterKey, setScreenshotLetterKey] = useState('T');
-  const [isConfigChanged, setIsConfigChange] = useState(false); //Para saber, si respecto a la configuración inicial, se ha realizado algún cambio
-  const [isApiKeyValid, setIsApiKeyValid] = useState(true); //Para controlar un mensaje de feedback en caso que la API Key no sea valida
-  const [openIaModels, setOpenAiModels] = useState([]); //Lista de modelos de OpenAi disponibles para el dropdown
-  const [selectedOpenAiModel, setSelectedOpenAiModel] = useState(); //Modelo seleccionado del dropdown de modelos de OpenAi
+  const [isConfigChanged, setIsConfigChange] = useState(false); //True if any changes have been made to the initial configuration
+  const [isApiKeyValid, setIsApiKeyValid] = useState(true); //Controls feedback message in case the API key is not valid
+  const [openIaModels, setOpenAiModels] = useState([]); //List of OpenAI models available for dropdown
+  const [selectedOpenAiModel, setSelectedOpenAiModel] = useState(); //Selected model from the OpenAI model dropdown
 
   useEffect(() => {
-    setIsConfigChange(false); //Al cargar una nueva config de main, asumimos que aun no se han realizado cambios
-    //Cada vez que cambie la config de main, actualizamos los hooks del componente.
+    setIsConfigChange(false); //When loading a new configuration from the main thread, we assume no changes have been made yet
+    //Every time the main thread config is changed, we update the component hooks
     if (Object.keys(config).length > 0) {
-      //No recorremos en caso de que las config aun no las tengamos. Esto sucede en el primer render.
+      //We do not run on the first render, as we don't have the config yet.
       setOpenaiApiKey(config.openaiApiKey);
       setBasePromptOptions(config.basePromptOptions);
-      //Para ver si tenemos guardado un customPrompt o algo del listado basePromptOptions
+      //Check to see if we have saved a customPrompt or something from the basePromptOptions list
       if (config.basePromptOptions?.includes(config.basePrompt)) {
         setUsePrebuildPrompt(true);
         setBasePrompt(config.basePrompt);
@@ -85,11 +85,11 @@ const Config = () => {
       setOpenAiModels(config.openIaModels);
       setSelectedOpenAiModel(config.selectedOpenAiModel);
 
-      setLoading(false); //Marcamos que ya tenemos la carga inicial de configuraciones
+      setLoading(false); //We have completed the initial load of configurations
     }
   }, [config]);
 
-  //Para detectar si se ha realizado un cambio en las configuraciones
+  //To detect if a change has been made to the configurations
   useEffect(() => {
     if (!loading) {
       let changeInForm = false;
@@ -125,7 +125,7 @@ const Config = () => {
     selectedOpenAiModel
   ]);
 
-  //Para remover el mensaje de alerta de API Key incorrecta en caso que se vacié el input
+  //To remove the invalid API Key alert message when the input is cleared
   useEffect(() => {
     if (openaiApiKey === '') {
       setIsApiKeyValid(true);
@@ -160,16 +160,16 @@ const Config = () => {
     setSelectedOpenAiModel(value);
   };
 
-  //Al hacer click en Aplicar
+  //By clicking "Apply"
   const onApplyConfig = async () => {
-    //Configuraciones que siempre van a estar seleccionadas
+    //Settings that will always be selected
     const config = {
       screenshotModifierKey: screenshotModifierKey,
       selectedOpenAiModel: selectedOpenAiModel,
     };
 
-    //Validamos de forma asíncrona que la API KEY ingresada sea valida
-    //Si el valor introducido es un string vació, nos saltamos la verificación, ya que puede ser el usuario simplemente eliminando sus credenciales
+    //Asynchronously validate that the API Key is valid
+    //If the key is empty, we skip the validation
     if (openaiApiKey.trim() !== '') {
       const isValid = await ipcRenderer.invoke('checkApiKey');
       if (isValid) {
@@ -184,14 +184,14 @@ const Config = () => {
       config['openaiApiKey'] = openaiApiKey.trim();
     }
 
-    //Validamos la letra para capturar screenshots
+    //Apply changes to the screenshot letter key
     if (screenshotLetterKey.trim() !== '') {
       config['screenshotLetterKey'] = screenshotLetterKey.trim();
     } else {
       return;
     }
 
-    //Vemos si el usuario selecciono una prompt del listado o una custom
+    //Check to see if the user selected a prompt from the list or a custom one
     if (usePrebuildPrompt) {
       if (basePrompt) {
         config['basePrompt'] = basePrompt;
@@ -199,7 +199,7 @@ const Config = () => {
         return;
       }
     } else {
-      //Nos aseguramos que la custom sea valida
+      //Make sure the custom prompt is not empty
       if (customBasePrompt.trim() !== '') {
         config['basePrompt'] = customBasePrompt.trim();
       } else {
@@ -207,7 +207,7 @@ const Config = () => {
       }
     }
 
-    //Enviamos evento a main con las configs
+    //Send the updated configurations to the main thread
     ipcRenderer.send('setConfig', config);
   };
 
@@ -259,7 +259,7 @@ const Config = () => {
     return;
   };
 
-  //Cargamos el contenido o un mensaje de carga si aun no tenemos las configs de main
+  //Load the content (or a loading icon if we don't have the main configs yet)
   const renderContent = () => {
     if (!loading) {
       return (

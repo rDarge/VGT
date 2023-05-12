@@ -9,7 +9,7 @@ const queue = async.queue(function (task) {
 }, 1);
 
 async function processImg(imgObj, callback) {
-  //Enviamos la imagen a nuestro back de Python para reconocer los caracteres
+  //Send the image to our python backend to recognize the characters
   let text = 'Error';
   try {
     const res = await axios.post(
@@ -32,7 +32,7 @@ async function processImg(imgObj, callback) {
 }
 
 async function traductionText(textObj, callback) {
-  //Enviamos el texto raw a nuestro back de Python para que traduzca
+  //Send the raw text to the python backend for translation
   let trad = 'Error';
 
   try {

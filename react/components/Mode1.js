@@ -4,8 +4,8 @@ import TraductionCard from './TraductionCard';
 import { useGlobalState } from './state';
 import { Link } from 'react-router-dom';
 
-//TODO: Mensaje inicial con tutorial
-//TODO: No se puede usar hasta que se especifique una API Key (mensaje de error especial en caso de llamada a API que retorne un error relacionado a la cuenta)
+//TODO: Initial message with tutorial
+//TODO: Cannot be used until an API Key is specified (special error message in case of API call returning account related error)
 const Mode1 = () => {
   const [config] = useGlobalState('config');
   const [entries] = useGlobalState('entries');
@@ -58,7 +58,7 @@ const Mode1 = () => {
     }
   };
 
-  //Hacemos el render en orden inverso
+  //Render in reverse order
   return (
     <Layout.Content className="site-layout content-padding">
       {renderContent()}

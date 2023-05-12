@@ -2,9 +2,9 @@ const path = require('path');
 const url = require('url');
 const { globalShortcut, BrowserWindow } = require('electron');
 
-//TODO: Forzar focus a esta ventana ?
+//TODO: Force focus to this window?
 function createCaptureWindow() {
-  //Instancia ventana
+  //Window instance
   captureWindow = new BrowserWindow({
     title: 'capture',
     width: 500,
@@ -25,9 +25,8 @@ function createCaptureWindow() {
     },
   });
 
-  //Genera elemento a cargar en la ventana dado el ambiente de ejecución
-  //Usamos hash para indicar la ruta que debe ser ejecutada en el contenido
-  //Ojo que en el path.join usamos ".." para llegar correctamente al .html
+  //Load the appropriate window per the execution environment
+  //Use hash to indicate the path that should be executed in the context
   let indexPath;
   if (process.env.NODE_ENV === 'development') {
     indexPath = url.format({
@@ -41,29 +40,27 @@ function createCaptureWindow() {
     indexPath = url.format({
       protocol: 'file:',
       hash: '/capture',
-      pathname: path.join(__dirname, '..', '..', 'dist', 'index.html'),
+      pathname: path.join(__dirname, '..', '..', 'dist', 'index.html'), //Traverse upwards from the execution path to reach the correct page in PROD
       slashes: true,
     });
   }
 
-  //Selecciona en que pantalla abrrir el capturador
+  //Select on which screen to open the grabber
   //const screenList = screen.getAllDisplays();
   //captureWindow.setBounds(screenList[1].workArea);
 
-  //Evita que el nombre de la ventana sea cambiado por React
+  //Prevent the window name from being changed by React
   captureWindow.on('page-title-updated', function (e) {
     e.preventDefault();
   });
 
-  //Carga contenido de ventana
+  //Load window content
   captureWindow.loadURL(indexPath);
 
   //captureWindow.setBackgroundColor('#00000000');
 
-  captureWindow.maximize(); // ?Pasar como propiedad al instancias ventana
+  captureWindow.maximize(); // TODO: Pass as property to window instance?
 
-  //Mostramos la ventana cuando esta todo listo
-  //Creamos un shortcut para cerrar la ventana en caso de usar la tecla Ecs
   captureWindow.once('ready-to-show', () => {
     globalShortcut.register('Escape', () => {
       captureWindow.close();
@@ -71,8 +68,6 @@ function createCaptureWindow() {
     captureWindow.show();
   });
 
-  //En caso de ser cerrada, eliminamos la ventana
-  //Nos aseguramos de eliminar el handler de escape usado para esta venta
   captureWindow.on('closed', () => {
     captureWindow = null;
     globalShortcut.unregister('Escape');

@@ -15,29 +15,22 @@ const { initModelSequence } = require('./electron/helpers/initModelSequence');
 //resetConfig();
 //resetFirstInit();
 
-checkInitialConfig(); //Setea las configuraciones iniciales y/o carga las configuraciones guardadas
+checkInitialConfig(); //Set and/or load initial configurations
 
-ipcHandler(); //Inicia los handlers
+ipcHandler(); //Initialize handlers
 
-initBackend(); //Inicia el backend
+initBackend(); //Initialize backend
 
 app.on('ready', () => {
-  //Iniciamos la secuencia de carga de modelos del back, cuando estamos listos cargamos la ventana principal
+  //Load the backend models and then initialzie the main window and shortcut handler
   initModelSequence().then(() => {
     createMainWindow();
     createCaptureWinShortcutHandler();
   });
 });
 
-/* Necesario ??
-app.on('activate', () => {
-  if (mainWindow === null) {
-    createMainWindow();
-  }
-});
-*/
 
-//Si cerramos con CTRL+C esto no se ejecuta
+//If closed with "ctrl-c", this is not executed
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();

@@ -7,7 +7,7 @@ import uvicorn
 
 from multiprocessing import freeze_support
 
-# TODO: Quitar paquete taskipy de poetry y sacar referencias del .toml (lo usamos para correr python run task test)
+# TODO: Remove taskipy package from poetry and remove references from .toml (we use it to run python run task test)
 
 if __name__ == "__main__":
     freeze_support()

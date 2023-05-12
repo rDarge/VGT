@@ -71,7 +71,7 @@ async function checkModelStatus() {
 }
 
 function initModelSequenceReady() {
-  //Cambiamos esta a secuencia lista y enviamos evento a front
+  //Send the ready sequence signal to the frontend
   setInitModelSequenceReady(true);
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'Visual-GPT-Translator') {
@@ -81,18 +81,15 @@ function initModelSequenceReady() {
 }
 
 /**
- * Este secuencia inicial sirve para comprobar si el backend de python ya ha descargado el modelo usado por Manga Ocr
- * La secuencia en primer lugar fija una config para que front despliegue un Modal para avisar y mostrar el estado de comprobación del  modelo
- * Luego la secuencia busca establecer conexión con el back (en caso de fallar reiteradas veces el programa se cierra)
- * Posteriormente se ve si el modelo ya ha sido descargado. En caso de serlo se cambia la config y se emite un evento para que front remueva el Modal
- * En caso contrario el Modal se mantendrá mientras se descarga el modelo
- *
- * Solo luego de terminar este proceso se podrá acceder a otra funcionalidades como el Modal "primer inicio" y/o el shortcutHandler
+ * This initial sequence checks to see if the backend has already downladed the MangaOCR model.
+ * 1. A loading modal is displayed on the frontend
+ * 2. Attempt to connect to the backend (close after repeated failures)
+ * 3. Wait for the backend to finish download the model
  */
 async function initModelSequence() {
-  setInitModelSequenceReady(false); //Marcamos para que front despliegue el Modal de carga inicial
-  await checkBackend(); //Comprobamos estado de back
-  await checkModelStatus(); //Vemos el estado del modelo en el disco y cargamos si es necesario
+  setInitModelSequenceReady(false); //Display a loading modal in the frontend
+  await checkBackend(); 
+  await checkModelStatus();
 }
 
 module.exports = { initModelSequence };

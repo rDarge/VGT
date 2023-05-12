@@ -6,37 +6,36 @@ const {
   getInitModelSequenceReady,
 } = require('../helpers/config');
 
-//Elimina todos los handler y crea un nuevo handler para la ventana de captura
+//Remove any existing handlers and create a new one for the capture window
 function reloadCaptureWinShortcutHandler() {
-  //Cerramos cualquier ventana de captura que ya este abierta
+  //Close any capture window that is already open
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'capture') {
       win.close();
     }
   });
-  //Sacamos el registro de las capturas de shortcuts
+  //Unregister the capture shortcut and create a new one
   globalShortcut.unregisterAll();
-  //Creamos un nuevo handler
   createCaptureWinShortcutHandler();
 }
 
-//Crea un nuevo handler para el shortcut que crea la ventana de captura
+//Create a new handler for the shortcut that creates the capture window
 function createCaptureWinShortcutHandler() {
-  //TODO, solo aceptar si estan todas las condiciones para poder efectuar traducciones
+  //TODO: Only accept if the shortcut can actually be performed
 
   const shortcutKeys = getShortcutConfig();
   const shortcutCombination =
     shortcutKeys.screenshotModifierKey + '+' + shortcutKeys.screenshotLetterKey;
 
   globalShortcut.register(shortcutCombination, () => {
-    //Solo creamos la ventana si no existe
+    //Check to see if the capture window already exists
     let captureIsDisplayed = false;
     BrowserWindow.getAllWindows().forEach((win) => {
       if (win.title === 'capture') {
         captureIsDisplayed = true;
       }
     });
-    //Solo creamos la ventana en caso que no exista; y que el usuario ya pasara por el primer inicio; y la secuencia de verificación inicial del modelo ya esta lista
+    //Only create the window if: it hasn't already been created, the first start has been completed, and the model is ready
     if (
       !captureIsDisplayed &&
       getFirstInitReady() &&

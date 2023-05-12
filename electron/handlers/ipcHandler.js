@@ -14,49 +14,49 @@ const { reloadCaptureWinShortcutHandler } = require('./shortcutsHandler');
 
 function ipcHandler() {
   /**
-   * Eventos relacionados a la verificación inicial del modelo
+   * Model Verification Events
    */
 
-  //Resuelve la petición de front para saber si la verificación inicial del modelo ya esta lista
+  //Handle inquiries regarding whether the model is ready
   ipcMain.handle('getInitModelSequenceReady', async () => {
     return getInitModelSequenceReady();
   });
 
   /**
-   * Eventos relacionados a la secuencia de inicio
+   * Boot Sequence Events
    */
 
-  //Resuelve la petición de front para saber si el sistema ya paso por el primer inicio
+  //Handles inquiries regarding whether the system has completed startup steps
   ipcMain.handle('getFirstInitReady', async () => {
     return getFirstInitReady();
   });
 
-  //Cambiamos el estado del FirstInitReady
+  //Change the state of FirstInitReady
   ipcMain.on('setFirstInitReady', (e, status) => {
     setFirstInitReady(status);
   });
 
   /*
-   * Eventos relacionados al panel de configuraciones
+   * Settings Panel Events
    */
 
-  //Cuando react quiere obtener las configuraciones actuales
+  //Handles requests to get the current settings
   ipcMain.handle('getConfig', async () => {
     return getFullConfigs();
   });
 
-  //Valida que la API KEY ingresada sea correcta
+  //Validates that the API key is correct
   ipcMain.handle('checkApiKey', async () => {
-    //TODO: Consultar a back sobre la validez de la key
+    //TODO: Query the backend to check the validity of the key
     return true;
   });
 
-  //Cuando react nos entrega un nuevo set de configuraciones
+  //Handles setting updates from react
   ipcMain.on('setConfig', (e, values) => {
     const prevConfigs = getFullConfigs();
-    saveConfig(values); // Guardamos las nuevas configuraciones
+    saveConfig(values); // Save the new configurations
 
-    //En caso de cambiar la config del shortcut para la creación de la ventana de captura, creamos nuevamente el handler de shortcut
+    //In cas the user changes the capture window shortcut, reload the shortcut handler
     if (
       prevConfigs.screenshotLetterKey !== values.screenshotLetterKey ||
       prevConfigs.screenshotModifierKey !== values.screenshotModifierKey
@@ -64,7 +64,7 @@ function ipcHandler() {
       reloadCaptureWinShortcutHandler();
     }
 
-    //Emitimos un evento con las configuraciones refrescadas
+    //Emit an event with the updated configurations
     BrowserWindow.getAllWindows().forEach((win) => {
       if (win.title === 'Visual-GPT-Translator') {
         win.webContents.send('refreshConfig', getFullConfigs());
@@ -72,14 +72,14 @@ function ipcHandler() {
     });
   });
 
-  //Reinicia las configuraciones a por defecto
+  //Reset the settings to the default
   ipcMain.on('resetConfig', async () => {
     resetConfig();
 
-    //En caso de cambiar la config del shortcut para la creación de la ventana de captura, creamos nuevamente el handler de shortcut
+    //Reset the shortcut handler (in case it was changed)
     reloadCaptureWinShortcutHandler();
 
-    //Emitimos un evento con las configuraciones refrescadas
+    //Emit an event with the updated configurations
     BrowserWindow.getAllWindows().forEach((win) => {
       if (win.title === 'Visual-GPT-Translator') {
         win.webContents.send('refreshConfig', getFullConfigs());
@@ -88,14 +88,14 @@ function ipcHandler() {
   });
 
   /*
-   * Eventos relacionados a acciones en el pane del Mode 1
+   * Mode 1 Panel Events
    */
   ipcMain.on('deleteEntry', (_e, entryId) => {
     deleteItemById(entryId);
   });
 
   /*
-   * Eventos relacionados al proceso de capturar una imagen de la pantalla
+   * Screen Capture Events
    */
   let p1Coords = null;
   let p2Coords = null;
@@ -108,10 +108,10 @@ function ipcHandler() {
     p2Coords = screen.dipToScreenPoint(screen.getCursorScreenPoint());
   });
 
-  //TODO, soporte multiples monitores
+  //TODO: Support multiple monitors
   ipcMain.handle('captureScreenshot', async () => {
     if (p1Coords && p2Coords) {
-      //Calcula el rectangulo de captura
+      //Calculate the capture rectangle
       let xOrigin = p1Coords.x;
       if (p1Coords.x > p2Coords.x) {
         xOrigin = p2Coords.x;
@@ -120,7 +120,7 @@ function ipcHandler() {
       if (p1Coords.y > p2Coords.y) {
         yOrigin = p2Coords.y;
       }
-      //Añadimos +1 al origen y restamos -1 en las dimensiones para crear un "margen" para que no salga rastro del color de fondo usado en el proceso de recorte
+      //Manipulate the dimensions slightly so none of the background color used in the clipping process appears
       const captureRectZone = {
         x: xOrigin + 1,
         y: yOrigin + 1,
@@ -128,29 +128,29 @@ function ipcHandler() {
         height: Math.abs(p1Coords.y - p2Coords.y) - 1,
       };
 
-      //Si la imagen es muy pequeña, no analizamos nada
+      //If the image is very small, do not analyze anything
       if (captureRectZone.width < 25 || captureRectZone.height < 25) {
         return;
       }
 
-      //calcula el tamaño completo de la pantalla  //TODO: Optimizar para siempre tener actualizado dado el monitor. Debe ser cambiado si el monitor cambia o su scale factor
+      //Calculate the full size of the screen  //TODO: Update if the monitor resolution or scale factor changes
       const screenDetails = screen.getPrimaryDisplay();
       const screenWidth = screenDetails.size.width * screenDetails.scaleFactor;
       const screenHeight =
         screenDetails.size.height * screenDetails.scaleFactor;
 
-      //Tomar la imagen de  la pantalla
+      //Take screenshot
       const sources = await desktopCapturer.getSources({
         types: ['screen'],
         thumbnailSize: { width: screenWidth, height: screenHeight },
       });
 
-      //Recortar la imagen del la pantalla da la zona seleccionada
-      //Genera un URL con la data de la imagen
+      //Crop the screenshot to the specified area
+      //Generate a URL with the image data
       const img = sources[0].thumbnail.crop(captureRectZone).toDataURL();
-      //Todo, validar que la img tenga contenido (a veces sale sin info)
+      //TODO: Validate that the image has content (sometimes it doesn't)
 
-      //Guardamos la imagen con una ID única y adjuntamos el modelo seleccionado al momento de realizar la captura
+      //Save the image with a unique ID and specify the model selected at the time of capture
       addNewEntry({
         id: uuid.v4(),
         img: img,
