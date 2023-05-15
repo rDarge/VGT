@@ -1,13 +1,16 @@
 const { ipcRenderer } = require('electron');
 import React from 'react';
 import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { DeleteOutlined, RedoOutlined } from '@ant-design/icons';
 
 const TraductionCard = ({ entry }) => {
 
-  //When the "delete" button is clicked
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
+  };
+
+  const onRedoEntry = (entryId) => {
+    ipcRenderer.send('redoEntry', entryId);
   };
 
   return (
@@ -86,7 +89,7 @@ const TraductionCard = ({ entry }) => {
                 (Manga-OCR)
               </Typography.Text>
             </div>
-            {entry.trad ? (
+            {entry.text ? (
               <Input.TextArea
                 style={{ flexGrow: '1', resize: 'none' }}
                 value={entry.text}
@@ -113,6 +116,12 @@ const TraductionCard = ({ entry }) => {
               >
                 {entry.selectedModel.abbreviation}
               </Typography.Text>
+              <Button
+                shape="circle"
+                size={'small'}
+                onClick={() => onRedoEntry(entry.id)}
+                icon={<RedoOutlined style={{ fontSize: '14px' }} />}
+              />
             </div>
             {entry.trad ? (
               <Input.TextArea

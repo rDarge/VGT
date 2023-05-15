@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById } = require('./storeHandler');
+const { addNewEntry, deleteItemById, retryItemById } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -93,6 +93,9 @@ function ipcHandler() {
   ipcMain.on('deleteEntry', (_e, entryId) => {
     deleteItemById(entryId);
   });
+  ipcMain.on('redoEntry', (_e, entryId) => {
+    retryItemById(entryId);
+  })
 
   /*
    * Screen Capture Events

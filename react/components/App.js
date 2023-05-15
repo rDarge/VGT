@@ -7,9 +7,11 @@ import {
   addTrad,
   updateConfig,
   deleteEntry,
+  retryEntry,
   updateFirstInitReady,
   updateInitModelSequenceReady,
   updateBackendTerminalStreaming,
+  redoEntry,
 } from './state';
 
 const App = () => {
@@ -22,6 +24,10 @@ const App = () => {
     //When an entry is deleted
     ipcRenderer.on('entryDeleted', (e, entryId) => {
       deleteEntry(entryId);
+    });
+    //When an entry translation is retried
+    ipcRenderer.on('entryRetried', (e, entryId) => {
+      retryEntry(entryId);
     });
     //When the main thread has detected text for an image
     ipcRenderer.on('addText', (e, newText) => {

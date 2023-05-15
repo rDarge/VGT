@@ -25,6 +25,12 @@ function deleteItemById(id) {
   eventEmitter.emit('entryDeleted', id);
 }
 
+function retryItemById(id) {
+  delete items[id]['trad'];
+  eventEmitter.emit('entryRetried', id);
+  addTextToTraduction(items[id], addTraductionToImg);
+}
+
 function addNewEntry(imgObj) {
   console.log('Guardando nueva imagen');
   imgObj['text'] = null;
@@ -68,7 +74,7 @@ eventEmitter.on('newText', (textObj) => {
     }
   });
 
-  //Start translation process
+  //Defer translation process until user clicks on corresponding button
   addTextToTraduction(textObj, addTraductionToImg);
 });
 
@@ -92,9 +98,20 @@ eventEmitter.on('entryDeleted', (entryId) => {
   });
 });
 
+//When an entry translation is retried
+eventEmitter.on('entryRetried', (entryId) => {
+  //Send to the main screen TODO: Optimize to reduce iteration?
+  BrowserWindow.getAllWindows().forEach((win) => {
+    if (win.title === 'Visual-GPT-Translator') {
+      win.webContents.send('entryRetried', entryId);
+    }
+  });
+});
+
 module.exports = {
   addNewEntry,
   addTextToImg,
   deleteItemById,
+  retryItemById,
   cleanAll,
 };
