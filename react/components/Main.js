@@ -5,7 +5,7 @@ import AppMenu from './AppMenu';
 import Mode1 from './Mode1';
 import Config from './Config';
 import Capture from './Capture';
-import FirstInitModal from './FisrtInitModal';
+import FirstInitModal from './FirstInitModal';
 import InitModelSequenceModal from './InitModelSequenceModal';
 import { useGlobalState } from './state';
 import { GithubOutlined } from '@ant-design/icons';
