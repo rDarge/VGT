@@ -384,7 +384,7 @@ const Config = () => {
               onClick={() => onApplyConfig()}
               disabled={!isConfigChanged}
             >
-              Aplicar
+              Apply
             </Button>
             <Popconfirm
               title="Reset"
