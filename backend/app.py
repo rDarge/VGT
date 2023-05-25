@@ -22,8 +22,8 @@ def watcher(parent_pid):
         info = []
         parentRunning = False
         for proc in psutil.process_iter():
-            # TODO: Use "electron.exe" for dev and "VGT.exe" for prod
-            if proc.name() == "electron.exe" or proc.name() == "VGT.exe":
+            # TODO: Use "electron.exe"|"Electron" for dev(win|mac) and "VGT.exe" for prod
+            if proc.name() == "electron.exe" or proc.name() == "VGT.exe" or proc.name() == "Electron":
                 info.append(str(proc))
             if proc.pid == parent_pid:
                 parentRunning = True
