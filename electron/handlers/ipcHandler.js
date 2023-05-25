@@ -104,11 +104,23 @@ function ipcHandler() {
   let p2Coords = null;
 
   ipcMain.on('event/mousedown', () => {
-    p1Coords = screen.dipToScreenPoint(screen.getCursorScreenPoint());
+    //Platform-agnostic manual calculation of point
+    const dipPoint = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(dipPoint);
+    p1Coords = {
+      x : dipPoint.x * display.scaleFactor, 
+      y: dipPoint.y * display.scaleFactor
+    };
   });
 
   ipcMain.on('event/mouseup', () => {
-    p2Coords = screen.dipToScreenPoint(screen.getCursorScreenPoint());
+    //Platform-agnostic manual calculation of point
+    const dipPoint = screen.getCursorScreenPoint();
+    const display = screen.getDisplayNearestPoint(dipPoint);
+    p2Coords = {
+      x : dipPoint.x * display.scaleFactor, 
+      y: dipPoint.y * display.scaleFactor
+    };
   });
 
   //TODO: Support multiple monitors
