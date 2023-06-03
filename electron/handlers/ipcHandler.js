@@ -108,8 +108,8 @@ function ipcHandler() {
     const dipPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(dipPoint);
     p1Coords = {
-      x : dipPoint.x * display.scaleFactor, 
-      y: dipPoint.y * display.scaleFactor
+      x : Math.floor(dipPoint.x * display.scaleFactor), 
+      y: Math.floor(dipPoint.y * display.scaleFactor)
     };
   });
 
@@ -118,8 +118,8 @@ function ipcHandler() {
     const dipPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(dipPoint);
     p2Coords = {
-      x : dipPoint.x * display.scaleFactor, 
-      y: dipPoint.y * display.scaleFactor
+      x : Math.floor(dipPoint.x * display.scaleFactor), 
+      y: Math.floor(dipPoint.y * display.scaleFactor)
     };
   });
 
@@ -150,9 +150,9 @@ function ipcHandler() {
 
       //Calculate the full size of the screen  //TODO: Update if the monitor resolution or scale factor changes
       const screenDetails = screen.getPrimaryDisplay();
-      const screenWidth = screenDetails.size.width * screenDetails.scaleFactor;
+      const screenWidth = Math.floor(screenDetails.size.width * screenDetails.scaleFactor);
       const screenHeight =
-        screenDetails.size.height * screenDetails.scaleFactor;
+        Math.floor(screenDetails.size.height * screenDetails.scaleFactor);
 
       //Take screenshot
       const sources = await desktopCapturer.getSources({
