@@ -12,6 +12,25 @@ const {
 } = require('../helpers/config');
 const { reloadCaptureWinShortcutHandler } = require('./shortcutsHandler');
 
+function getScreenDetails(display) {
+  const width = Math.floor(display.size.width * display.scaleFactor);
+  const height = Math.floor(display.size.height * display.scaleFactor);
+
+  return {
+    id: display.id.toString(),
+    width,
+    height,
+  }
+}
+
+function getPointOnClosestScreen(dipPoint, display) {
+  //Calculate position and screen height/width
+  const x = Math.floor((dipPoint.x  - display.bounds.x) * display.scaleFactor);
+  const y = Math.floor((dipPoint.y  - display.bounds.y) * display.scaleFactor);
+  
+  return { x, y };
+}
+
 function ipcHandler() {
   /**
    * Model Verification Events
@@ -100,30 +119,23 @@ function ipcHandler() {
   /*
    * Screen Capture Events
    */
+  let screenDetails = null;
   let p1Coords = null;
   let p2Coords = null;
 
   ipcMain.on('event/mousedown', () => {
-    //Platform-agnostic manual calculation of point
     const dipPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(dipPoint);
-    p1Coords = {
-      x : Math.floor(dipPoint.x * display.scaleFactor), 
-      y: Math.floor(dipPoint.y * display.scaleFactor)
-    };
+    screenDetails = getScreenDetails(display)
+    p1Coords = getPointOnClosestScreen(dipPoint, display);
   });
 
   ipcMain.on('event/mouseup', () => {
-    //Platform-agnostic manual calculation of point
     const dipPoint = screen.getCursorScreenPoint();
     const display = screen.getDisplayNearestPoint(dipPoint);
-    p2Coords = {
-      x : Math.floor(dipPoint.x * display.scaleFactor), 
-      y: Math.floor(dipPoint.y * display.scaleFactor)
-    };
+    p2Coords = getPointOnClosestScreen(dipPoint, display);
   });
 
-  //TODO: Support multiple monitors
   ipcMain.handle('captureScreenshot', async () => {
     if (p1Coords && p2Coords) {
       //Calculate the capture rectangle
@@ -148,22 +160,17 @@ function ipcHandler() {
         return;
       }
 
-      //Calculate the full size of the screen  //TODO: Update if the monitor resolution or scale factor changes
-      const screenDetails = screen.getPrimaryDisplay();
-      const screenWidth = Math.floor(screenDetails.size.width * screenDetails.scaleFactor);
-      const screenHeight =
-        Math.floor(screenDetails.size.height * screenDetails.scaleFactor);
-
-      //Take screenshot
+      //Find corresponding source for the screenshot 
       const sources = await desktopCapturer.getSources({
         types: ['screen'],
-        thumbnailSize: { width: screenWidth, height: screenHeight },
+        thumbnailSize: { width: screenDetails.width, height: screenDetails.height },
       });
+      const chosenSource = sources.filter(source => source.display_id === screenDetails.id)[0];
 
-      //Crop the screenshot to the specified area
+      //Crop the screenshot to the specified area 
       //Generate a URL with the image data
-      const img = sources[0].thumbnail.crop(captureRectZone).toDataURL();
-      //TODO: Validate that the image has content (sometimes it doesn't)
+      //TODO: Validate that the image has content; sometimes it doesn't
+      const img = chosenSource.thumbnail.crop(captureRectZone).toDataURL();
 
       //Save the image with a unique ID and specify the model selected at the time of capture
       addNewEntry({
@@ -171,9 +178,17 @@ function ipcHandler() {
         img: img,
         selectedModel: getSelectedOpenAiModelProprieties(),
       });
+
+      //Close all capture windows.
+      BrowserWindow.getAllWindows().forEach((win) => {
+        if (win.title.startsWith("capture")) {
+          win.close();
+        }
+      });
     }
     p1Coords = null;
     p2Coords = null;
+    screenDetails = null;
     return;
   });
 

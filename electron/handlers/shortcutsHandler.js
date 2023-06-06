@@ -44,6 +44,15 @@ function createCaptureWinShortcutHandler() {
       createCaptureWindow();
     }
   });
+
+  //Shortcut for closing the window
+  globalShortcut.register('Escape', () => {
+    BrowserWindow.getAllWindows().forEach((win) => {
+      if (win.title.startsWith("capture")) {
+        win.close();
+      }
+    });
+  });
 }
 
 module.exports = {
