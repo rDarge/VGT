@@ -31,6 +31,10 @@ function retryItemById(id) {
   addTextToTraduction(items[id], addTraductionToImg);
 }
 
+function updateItemTextById(textObj) {
+  items[textObj.id]['text'] = textObj.text;
+}
+
 function addNewEntry(imgObj) {
   console.log('Guardando nueva imagen');
   imgObj['text'] = null;
@@ -113,5 +117,6 @@ module.exports = {
   addTextToImg,
   deleteItemById,
   retryItemById,
+  updateItemTextById,
   cleanAll,
 };

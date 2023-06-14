@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, retryItemById } = require('./storeHandler');
+const { addNewEntry, deleteItemById, retryItemById, updateItemTextById } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -114,6 +114,9 @@ function ipcHandler() {
   });
   ipcMain.on('redoEntry', (_e, entryId) => {
     retryItemById(entryId);
+  })
+  ipcMain.on('updateEntryText', (_e, textObj) => {
+    updateItemTextById(textObj);
   })
 
   /*

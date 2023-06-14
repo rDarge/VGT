@@ -1,9 +1,14 @@
 const { ipcRenderer } = require('electron');
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
 import { DeleteOutlined, RedoOutlined } from '@ant-design/icons';
 
 const TraductionCard = ({ entry }) => {
+  const [text, setText] = useState(entry.text);
+
+  useEffect(() => {
+    setText(entry.text);
+  }, [entry.text])
 
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
@@ -12,6 +17,11 @@ const TraductionCard = ({ entry }) => {
   const onRedoEntry = (entryId) => {
     ipcRenderer.send('redoEntry', entryId);
   };
+
+  const updateEntryText = (event) => {
+    setText(event.target.value);
+    ipcRenderer.send('updateEntryText', {id: entry.id, text:event.target.value});
+  }
 
   return (
     <Card
@@ -92,7 +102,8 @@ const TraductionCard = ({ entry }) => {
             {entry.text ? (
               <Input.TextArea
                 style={{ flexGrow: '1', resize: 'none' }}
-                value={entry.text}
+                value={text}
+                onChange={updateEntryText}
               />
             ) : (
               <Spin />
