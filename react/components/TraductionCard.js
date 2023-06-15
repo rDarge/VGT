@@ -1,26 +1,36 @@
 const { ipcRenderer } = require('electron');
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
-import { DeleteOutlined, RedoOutlined } from '@ant-design/icons';
+import { DeleteOutlined, RedoOutlined, PlayCircleOutlined } from '@ant-design/icons';
+
+const TRANSLATION_HINT = 'Confirm that the scanned text is correct, then press the translate button above to request translation.';
 
 const TraductionCard = ({ entry }) => {
   const [text, setText] = useState(entry.text);
+  const [translating, setTranslating] = useState(false);
 
   useEffect(() => {
     setText(entry.text);
-  }, [entry.text])
+  }, [entry.text]);
+
+  useEffect(() => {
+    if (entry.trad) {
+      setTranslating(false);
+    }
+  }, [entry.trad]);
 
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
   };
 
-  const onRedoEntry = (entryId) => {
-    ipcRenderer.send('redoEntry', entryId);
+  const onTranslateEntry = (entryId) => {
+    setTranslating(true);
+    ipcRenderer.send('translateEntry', entryId);
   };
 
   const updateEntryText = (event) => {
     setText(event.target.value);
-    ipcRenderer.send('updateEntryText', {id: entry.id, text:event.target.value});
+    ipcRenderer.send('updateEntryText', { id: entry.id, text: event.target.value });
   }
 
   return (
@@ -130,18 +140,20 @@ const TraductionCard = ({ entry }) => {
               <Button
                 shape="circle"
                 size={'small'}
-                onClick={() => onRedoEntry(entry.id)}
-                icon={<RedoOutlined style={{ fontSize: '14px' }} />}
+                disabled={translating}
+                onClick={() => onTranslateEntry(entry.id)}
+                icon={entry.trad ? <RedoOutlined style={{ fontSize: '14px' }} /> : <PlayCircleOutlined style={{ fontSize: '14px' }} />}
               />
             </div>
-            {entry.trad ? (
-              <Input.TextArea
-                style={{ flexGrow: '1', resize: 'none' }}
-                value={entry.trad}
-              />
-            ) : (
-              <Spin />
-            )}
+            {
+              translating ?
+                <Spin />
+                :
+                <Input.TextArea
+                  style={{ flexGrow: '1', resize: 'none' }}
+                  disabled={!entry.trad}
+                  value={entry.trad || TRANSLATION_HINT}
+                />}
           </div>
         </Col>
       </Row>

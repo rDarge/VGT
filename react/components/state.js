@@ -25,7 +25,7 @@ export const deleteEntry = (entryId) => {
   });
 };
 
-export const retryEntry = (entryId) => {
+export const translateEntry = (entryId) => {
   setGlobalState('entries', (oldEntries) => {
     const newObjAux = { ...oldEntries};
     delete newObjAux[entryId]['trad']

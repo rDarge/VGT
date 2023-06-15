@@ -7,11 +7,10 @@ import {
   addTrad,
   updateConfig,
   deleteEntry,
-  retryEntry,
+  translateEntry,
   updateFirstInitReady,
   updateInitModelSequenceReady,
   updateBackendTerminalStreaming,
-  redoEntry,
 } from './state';
 
 const App = () => {
@@ -26,8 +25,8 @@ const App = () => {
       deleteEntry(entryId);
     });
     //When an entry translation is retried
-    ipcRenderer.on('entryRetried', (e, entryId) => {
-      retryEntry(entryId);
+    ipcRenderer.on('entryTranslated', (e, entryId) => {
+      translateEntry(entryId);
     });
     //When the main thread has detected text for an image
     ipcRenderer.on('addText', (e, newText) => {
