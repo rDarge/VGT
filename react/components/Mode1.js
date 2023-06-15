@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layout, Col, Row } from 'antd';
-import TraductionCard from './TraductionCard';
+import EntryCard from './EntryCard';
 import { useGlobalState } from './state';
 import { Link } from 'react-router-dom';
 
@@ -46,7 +46,7 @@ const Mode1 = () => {
         <Row gutter={[8, 8]}>
           {Object.keys(entries).map((_entry, index, array) => (
             <Col key={entries[array[array.length - 1 - index]].id} span={24}>
-              <TraductionCard
+              <EntryCard
                 entry={entries[array[array.length - 1 - index]]}
               />
             </Col>

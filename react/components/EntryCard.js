@@ -1,36 +1,28 @@
 const { ipcRenderer } = require('electron');
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
-import { DeleteOutlined, RedoOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { DeleteOutlined } from '@ant-design/icons';
+import TranslationCard from './TranslationCard';
 
-const TRANSLATION_HINT = 'Confirm that the scanned text is correct, then press the translate button above to request translation.';
-
-const TraductionCard = ({ entry }) => {
+const EntryCard = ({ entry }) => {
   const [text, setText] = useState(entry.text);
-  const [translating, setTranslating] = useState(false);
 
   useEffect(() => {
     setText(entry.text);
   }, [entry.text]);
 
-  useEffect(() => {
-    if (entry.trad) {
-      setTranslating(false);
-    }
-  }, [entry.trad]);
-
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
   };
 
-  const onTranslateEntry = (entryId) => {
-    setTranslating(true);
-    ipcRenderer.send('translateEntry', entryId);
-  };
-
   const updateEntryText = (event) => {
     setText(event.target.value);
-    ipcRenderer.send('updateEntryText', { id: entry.id, text: event.target.value });
+    const textObj = { id: entry.id, text: event.target.value };
+    ipcRenderer.send('updateEntryText', textObj);
+  }
+
+  const translateEntry = (id) => {
+    ipcRenderer.send('translateEntry', id);
   }
 
   return (
@@ -121,44 +113,15 @@ const TraductionCard = ({ entry }) => {
           </div>
         </Col>
         <Col span={8} style={{ display: 'flex', height: '100%' }}>
-          <div
-            style={{
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            <div style={{ fontWeight: 'bold', fontSize: '12px' }}>
-              Translated text{' '}
-              <Typography.Text
-                code
-                style={{ fontSize: '10px', verticalAlign: 'text-bottom' }}
-              >
-                {entry.selectedModel.abbreviation}
-              </Typography.Text>
-              <Button
-                shape="circle"
-                size={'small'}
-                disabled={translating}
-                onClick={() => onTranslateEntry(entry.id)}
-                icon={entry.trad ? <RedoOutlined style={{ fontSize: '14px' }} /> : <PlayCircleOutlined style={{ fontSize: '14px' }} />}
-              />
-            </div>
-            {
-              translating ?
-                <Spin />
-                :
-                <Input.TextArea
-                  style={{ flexGrow: '1', resize: 'none' }}
-                  disabled={!entry.trad}
-                  value={entry.trad || TRANSLATION_HINT}
-                />}
-          </div>
+            <TranslationCard 
+              translation={entry.trad} 
+              modelLabel={entry.selectedModel.abbreviation}
+              translateCallback={() => translateEntry(entry.id)} 
+            />
         </Col>
       </Row>
     </Card>
   );
 };
 
-export default TraductionCard;
+export default EntryCard;
