@@ -33,6 +33,7 @@ function translateItemById(id) {
 
 function updateItemTextById(textObj) {
   items[textObj.id]['text'] = textObj.text;
+  eventEmitter.emit('newText', textObj);
 }
 
 function addNewEntry(imgObj) {
