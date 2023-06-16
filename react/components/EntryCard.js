@@ -28,8 +28,8 @@ const EntryCard = ({ entry }) => {
   return (
     <Card
       bordered={false}
-      style={{ height: '130px' }}
-      bodyStyle={{ height: '100%', padding: '10px' }}
+      style={{ maxHeight: '150px' }}
+      bodyStyle={{ maxHeight: '100%', padding: '10px' }}
     >
       <Row gutter={10} style={{ height: '100%' }}>
         <Col
