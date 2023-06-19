@@ -117,10 +117,10 @@ async def translate_text(data: dict):
                 presence_penalty=0
             )
             return {"id": data["id"], "trad": completion.choices[0].text.strip()}
-        elif data["config"]["selectedOpenAiModel"]["fullname"] == "gpt-3.5-turbo-0301":
+        elif data["config"]["selectedOpenAiModel"]["fullname"] == "gpt-3.5-turbo":
             openai.api_key = data["config"]["openaiApiKey"]
             chat = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo-0301",
+                model="gpt-3.5-turbo",
                 messages=[{"role": "user", "content": data["config"]
                            ["basePrompt"] + '"' + data["text"] + '"'}],
                 # max_tokens=200,

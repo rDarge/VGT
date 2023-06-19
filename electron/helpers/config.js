@@ -2,12 +2,17 @@ const Store = require('electron-store');
 
 const store = new Store();
 
+const defaultPrompts = [
+  { label: 'JP→EN', text: 'Translate this text from Japanese to English:'},
+  { label: 'JP→ES', text: 'Traduce este testo del Japones al Español:'},
+]
+
 //Set the initial configurations
 const defaultPrompt = 'Translate this text from Japanese to English:';
 
 const defaultOpenAiModel = {
-  name: 'GPT 3.5 Turbo 0301',
-  fullname: 'gpt-3.5-turbo-0301',
+  name: 'GPT 3.5 Turbo',
+  fullname: 'gpt-3.5-turbo',
   mode: 'chat',
   abbreviation: 'GPT-3.5-Tur',
 };
@@ -20,6 +25,7 @@ const defaultConfigsValues = {
     defaultPrompt,
     'Traduce este testo del Japones al Español:',
   ],
+  prompts: [...defaultPrompts],
   openIaModels: [
     defaultOpenAiModel,
     {
@@ -37,6 +43,11 @@ function checkInitialConfig() {
   const basePrompt = store.get('basePrompt');
   if (!basePrompt) {
     store.set('basePrompt', defaultConfigsValues.basePrompt);
+  }
+  
+  const prompts = store.get('prompts');
+  if(!prompts) {
+    store.set('prompts', defaultConfigsValues.prompts);
   }
 
   const screenshotModifierKey = store.get('screenshotModifierKey');
@@ -76,6 +87,7 @@ function getFullConfigs() {
     screenshotModifierKey: store.get('screenshotModifierKey'),
     screenshotLetterKey: store.get('screenshotLetterKey'),
     basePromptOptions: store.get('basePromptOptions'),
+    prompts: store.get('prompts'),
     openIaModels: store.get('openIaModels'),
     selectedOpenAiModel: store.get('selectedOpenAiModel'),
   };
@@ -139,6 +151,12 @@ function saveConfig(newConfigs) {
       store.set('selectedOpenAiModel', newConfigs.selectedOpenAiModel);
     }
   }
+
+  if (newConfigs.prompts) {
+    if(newConfigs.prompts.length > 0) {
+      store.set('prompts', newConfigs.prompts);
+    }
+  }
 }
 
 //Reset the settings back to initial values
@@ -151,6 +169,7 @@ function resetConfig() {
   );
   store.set('screenshotLetterKey', defaultConfigsValues.screenshotLetterKey);
   store.set('basePromptOptions', defaultConfigsValues.basePromptOptions);
+  store.set('prompts', defaultConfigsValues.prompts);
   store.set('openIaModels', defaultConfigsValues.openIaModels);
   store.set('selectedOpenAiModel', defaultConfigsValues.selectedOpenAiModel);
 }

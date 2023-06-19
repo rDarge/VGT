@@ -4,7 +4,7 @@ import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import TranslationCard from './TranslationCard';
 
-const EntryCard = ({ entry }) => {
+const EntryCard = ({ entry, config }) => {
   const [text, setText] = useState(entry.text);
 
   useEffect(() => {
@@ -115,8 +115,8 @@ const EntryCard = ({ entry }) => {
         <Col span={8} style={{ display: 'flex', height: '100%' }}>
             <TranslationCard 
               translation={entry.trad} 
-              modelLabel={entry.selectedModel.abbreviation}
               translateCallback={() => translateEntry(entry.id)} 
+              config={config}
             />
         </Col>
       </Row>

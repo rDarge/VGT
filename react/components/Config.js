@@ -1,6 +1,6 @@
 const { ipcRenderer, shell } = require('electron');
 import React, { useEffect, useState } from 'react';
-import { Layout } from 'antd';
+import { Layout, Space } from 'antd';
 import {
   Button,
   Input,
@@ -12,7 +12,7 @@ import {
   Select as SelectAnt,
 } from 'antd';
 
-import { FormOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { FormOutlined, QuestionCircleOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { useGlobalState } from './state';
 
 //TODO: Add an option to delete the model from the cache
@@ -54,10 +54,7 @@ const Config = () => {
 
   const [loading, setLoading] = useState(true); //Determines if we have already loaded the configurations from the main thread
   const [openaiApiKey, setOpenaiApiKey] = useState('');
-  const [basePromptOptions, setBasePromptOptions] = useState([]); //Dropdown prompt list
-  const [usePrebuildPrompt, setUsePrebuildPrompt] = useState(true); //True if the value of "basePrompt" is found in the list of "basePromptOptions"
-  const [basePrompt, setBasePrompt] = useState(null); //Selected dropdown prompt value
-  const [customBasePrompt, setCustomBasePrompt] = useState(''); //Prompt custom value
+  const [prompts, setPrompts] = useState([]); //Dropdown prompt list
   const [screenshotModifierKey, setScreenshotModifierKey] = useState('Ctrl');
   const [screenshotLetterKey, setScreenshotLetterKey] = useState('T');
   const [isConfigChanged, setIsConfigChange] = useState(false); //True if any changes have been made to the initial configuration
@@ -71,15 +68,7 @@ const Config = () => {
     if (Object.keys(config).length > 0) {
       //We do not run on the first render, as we don't have the config yet.
       setOpenaiApiKey(config.openaiApiKey);
-      setBasePromptOptions(config.basePromptOptions);
-      //Check to see if we have saved a customPrompt or something from the basePromptOptions list
-      if (config.basePromptOptions?.includes(config.basePrompt)) {
-        setUsePrebuildPrompt(true);
-        setBasePrompt(config.basePrompt);
-      } else {
-        setUsePrebuildPrompt(false);
-        setCustomBasePrompt(config.basePrompt);
-      }
+      setPrompts(config.prompts);
       setScreenshotModifierKey(config.screenshotModifierKey);
       setScreenshotLetterKey(config.screenshotLetterKey);
       setOpenAiModels(config.openIaModels);
@@ -96,15 +85,6 @@ const Config = () => {
       if (openaiApiKey !== config.openaiApiKey) {
         changeInForm = true;
       }
-      if (usePrebuildPrompt) {
-        if (basePrompt !== config.basePrompt) {
-          changeInForm = true;
-        }
-      } else {
-        if (customBasePrompt !== config.basePrompt) {
-          changeInForm = true;
-        }
-      }
       if (screenshotModifierKey !== config.screenshotModifierKey) {
         changeInForm = true;
       }
@@ -114,14 +94,17 @@ const Config = () => {
       if (selectedOpenAiModel !== config.selectedOpenAiModel) {
         changeInForm = true;
       }
+      changeInForm = changeInForm 
+        || prompts.length != config.prompts.length 
+        || prompts.filter((prompt, index) => config.prompts[index] !== prompt).length > 0;
+
       setIsConfigChange(changeInForm);
     }
   }, [
     openaiApiKey,
     screenshotModifierKey,
     screenshotLetterKey,
-    basePrompt,
-    customBasePrompt,
+    prompts,
     selectedOpenAiModel
   ]);
 
@@ -131,18 +114,6 @@ const Config = () => {
       setIsApiKeyValid(true);
     }
   }, [openaiApiKey]);
-
-  const handleUsePrebuildPromptChange = (e) => {
-    setUsePrebuildPrompt(e.target.value === 'prebuild');
-  };
-
-  const handleBasePromptChange = (value) => {
-    setBasePrompt(value);
-  };
-
-  const handleCustomBasePromptChange = (e) => {
-    setCustomBasePrompt(e.target.value);
-  };
 
   const handleOpenaiApiKeyChange = (event) => {
     setOpenaiApiKey(event.target.value);
@@ -159,11 +130,37 @@ const Config = () => {
   const handleSelectedOpenAiModelChange = (value) => {
     setSelectedOpenAiModel(value);
   };
+  
+  const addNewPrompt = () => {
+    const newPrompts = [...prompts];
+    newPrompts.push({label: '', text:''});
+    setPrompts(newPrompts);
+  };
+
+  const handleChangePromptLabel = (event, index) => {
+    const newPrompt = {...prompts[index], label: event.target.value};
+    const newPrompts = [...prompts];
+    newPrompts.splice(index, 1, newPrompt);
+    setPrompts(newPrompts);
+  };
+
+  const handleChangePromptText = (event, index) => {
+    const newPrompt = {...prompts[index], text: event.target.value};
+    const newPrompts = [...prompts];
+    newPrompts.splice(index, 1, newPrompt);
+    setPrompts(newPrompts);
+  };
+
+  const deletePrompt = (index) => {
+    const newPrompts = [...prompts];
+    newPrompts.splice(index, 1);
+    setPrompts(newPrompts);
+  }
 
   //By clicking "Apply"
   const onApplyConfig = async () => {
     //Settings that will always be selected
-    const config = {
+    const newConfig = {
       screenshotModifierKey: screenshotModifierKey,
       selectedOpenAiModel: selectedOpenAiModel,
     };
@@ -174,41 +171,35 @@ const Config = () => {
       const isValid = await ipcRenderer.invoke('checkApiKey');
       if (isValid) {
         setIsApiKeyValid(true);
-        config['openaiApiKey'] = openaiApiKey.trim();
+        newConfig['openaiApiKey'] = openaiApiKey.trim();
       } else {
         setIsApiKeyValid(false);
         return;
       }
     } else {
       setIsApiKeyValid(true);
-      config['openaiApiKey'] = openaiApiKey.trim();
+      newConfig['openaiApiKey'] = openaiApiKey.trim();
     }
 
     //Apply changes to the screenshot letter key
     if (screenshotLetterKey.trim() !== '') {
-      config['screenshotLetterKey'] = screenshotLetterKey.trim();
+      newConfig['screenshotLetterKey'] = screenshotLetterKey.trim();
     } else {
       return;
     }
 
-    //Check to see if the user selected a prompt from the list or a custom one
-    if (usePrebuildPrompt) {
-      if (basePrompt) {
-        config['basePrompt'] = basePrompt;
-      } else {
-        return;
+    if (prompts.filter(p => p.text && p.label).length > 0) {
+      newConfig['prompts'] = prompts;
+      //If the user deletes the base prompt option, default to the first option
+      if(prompts.filter(p => p.text === config.basePrompt).length === 0) {
+        newConfig['basePrompt'] = prompts[0].text;
       }
     } else {
-      //Make sure the custom prompt is not empty
-      if (customBasePrompt.trim() !== '') {
-        config['basePrompt'] = customBasePrompt.trim();
-      } else {
-        return;
-      }
+      return;
     }
 
     //Send the updated configurations to the main thread
-    ipcRenderer.send('setConfig', config);
+    ipcRenderer.send('setConfig', newConfig);
   };
 
   const renderApiAlert = () => {
@@ -233,17 +224,6 @@ const Config = () => {
     return null;
   };
 
-  const renderCustomBasePromptAlert = () => {
-    if (!customBasePrompt || customBasePrompt === '') {
-      return (
-        <div style={{ fontSize: '12px', color: 'red' }}>
-          You need to define a Prompt
-        </div>
-      );
-    }
-    return;
-  };
-
   const onResetConfig = async () => {
     await ipcRenderer.send('resetConfig');
   };
@@ -263,7 +243,7 @@ const Config = () => {
   const renderContent = () => {
     if (!loading) {
       return (
-        <>
+        <Space direction='vertical'>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Popover content={apiKeyHelp}>
               <QuestionCircleOutlined style={{ fontSize: '14px' }} />
@@ -282,69 +262,55 @@ const Config = () => {
             suffix={<FormOutlined />}
             required
           />
-          <br />
           {renderApiAlert()}
           {renderWrongApiKeyAlert()}
-          <br />
-          <div style={{ fontWeight: 'bold' }}>OpenAI Model</div>
-          <SelectAnt
-            style={{ width: '300px' }}
-            placeholder="Select Model"
-            value={selectedOpenAiModel || openIaModels[0].name}
-            onChange={handleSelectedOpenAiModelChange}
-          >
-            {openIaModels.map((e) => (
-              <SelectAnt.Option key={e.fullname} value={e.fullname}>
-                {e.name}
-              </SelectAnt.Option>
-            ))}
-          </SelectAnt>
-          <br />
-          <br />
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Popover content={basePromptHelp}>
               <QuestionCircleOutlined style={{ fontSize: '14px' }} />
             </Popover>
             <div style={{ fontWeight: 'bold', marginRight: 5, marginLeft: 5 }}>
-              Base Prompt
+              Prompts
             </div>
+            <Button
+                  type='primary'
+                  shape="circle"
+                  size='small'
+                  icon={<PlusOutlined />}
+                  onClick={addNewPrompt}
+                />
           </div>
-          <Radio.Group
-            onChange={handleUsePrebuildPromptChange}
-            value={usePrebuildPrompt ? 'prebuild' : 'custom'}
-          >
-            <Radio value="prebuild">Pre-built Prompts</Radio>
-            <Radio value="custom">Custom Prompt</Radio>
-          </Radio.Group>
-          {usePrebuildPrompt ? (
-            <>
-              <SelectAnt
-                style={{ width: '100%' }}
-                placeholder="Select prompt"
-                value={basePrompt || basePromptOptions[0]}
-                onChange={handleBasePromptChange}
-              >
-                {basePromptOptions.map((e) => (
-                  <SelectAnt.Option key={e} value={e}>
-                    {e}
-                  </SelectAnt.Option>
-                ))}
-              </SelectAnt>
-              <br />
-            </>
-          ) : (
-            <>
-              <Input.TextArea
-                placeholder="Enter your custom prompt"
-                value={customBasePrompt}
-                onChange={handleCustomBasePromptChange}
-                autoSize={{ minRows: 3, maxRows: 5 }}
-              />
-              <br />
-              {renderCustomBasePromptAlert()}
-            </>
-          )}
-          <br />
+          <Space direction='vertical'>
+            {prompts.map((prompt, index) => 
+              <Space key={`prompt-${index}`}>
+                <Input key={`prompt-label-${index}`}
+                  addonBefore="Label"
+                  placeholder="JP→EN"
+                  style={{ width: 150 }}
+                  allowClear
+                  value={prompt.label}
+                  minLength={1}
+                  status={prompt.label.length > 0 ? null : 'error'}
+                  onChange={(event) => handleChangePromptLabel(event, index)}
+                />
+                <Input key={`prompt-text-${index}`}
+                  addonBefore="Text"
+                  placeholder="Translate from EN to JP"
+                  allowClear
+                  value={prompt.text}
+                  minLength={1}
+                  status={prompt.label.length > 0 ? null : 'error'}
+                  onChange={(event) => handleChangePromptText(event, index)}
+                />
+                <Button key={`prompt-delete-${index}`}
+                  danger="true"
+                  shape="circle"
+                  size='small'
+                  icon={<DeleteOutlined />}
+                  onClick={() => deletePrompt(index)}
+                />
+              </Space>
+            )}
+          </Space>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <div style={{ fontWeight: 'bold', marginRight: 5 }}>
               Screenshot shortcut
@@ -396,7 +362,7 @@ const Config = () => {
               <a>Reset to default</a>
             </Popconfirm>
           </div>
-        </>
+        </Space>
       );
     } else {
       return (

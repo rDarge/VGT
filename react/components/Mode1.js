@@ -48,6 +48,7 @@ const Mode1 = () => {
             <Col key={entries[array[array.length - 1 - index]].id} span={24}>
               <EntryCard
                 entry={entries[array[array.length - 1 - index]]}
+                config={config}
               />
             </Col>
           ))}
