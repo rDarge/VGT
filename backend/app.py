@@ -11,7 +11,11 @@ import multiprocessing
 import os
 import signal
 import openai
-import json
+import winsdk
+from winsdk.windows.media.ocr import OcrEngine
+from winsdk.windows.globalization import Language
+from winsdk.windows.storage.streams import DataWriter
+from winsdk.windows.graphics.imaging import SoftwareBitmap, BitmapPixelFormat
 
 # Process in charge of stopping the FastApi worker in case electron.exe (or VGT.exe) ceases to exist. 
 # This process self-terminates in case the parent process ceases to exist. 
@@ -34,6 +38,14 @@ def watcher(parent_pid):
             os.kill(parent_pid, signal.SIGTERM)
             raise SystemExit
         time.sleep(1)
+
+def recognize_bytes(bytes, width, height, lang='en'):
+    cmd = 'Add-WindowsCapability -Online -Name "Language.OCR~~~en-US~0.0.1.0"'
+    assert OcrEngine.is_language_supported(Language(lang)), cmd
+    writer = DataWriter()
+    writer.write_bytes(bytes)
+    sb = SoftwareBitmap.create_copy_from_buffer(writer.detach_buffer(), BitmapPixelFormat.RGBA8, width, height)
+    return OcrEngine.try_create_from_language(Language(lang)).recognize_async(sb)
 
 
 app = FastAPI()
@@ -96,7 +108,12 @@ async def translate_dataurl_img(data: dict):
         mocr = MangaOcr()
     imagen_decodificada = base64.b64decode(data["img"].split(",")[1])
     with Image.open(io.BytesIO(imagen_decodificada)) as image:
-        text = mocr(image)
+        # text = (await winocr.recognize_pil(image, 'ja')).text
+        if image.mode != 'RGBA':
+            image = image.convert('RGBA')
+        result = await recognize_bytes(image.tobytes(), image.width, image.height, 'ja')
+        text = result.text
+        # text = mocr(image)
     return {"id": data["id"], "text": text}
 
 
