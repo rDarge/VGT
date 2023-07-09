@@ -108,7 +108,6 @@ async def translate_dataurl_img(data: dict):
         mocr = MangaOcr()
     imagen_decodificada = base64.b64decode(data["img"].split(",")[1])
     with Image.open(io.BytesIO(imagen_decodificada)) as image:
-        # text = (await winocr.recognize_pil(image, 'ja')).text
         if image.mode != 'RGBA':
             image = image.convert('RGBA')
         result = await recognize_bytes(image.tobytes(), image.width, image.height, 'ja')

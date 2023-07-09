@@ -59,8 +59,6 @@ const Config = () => {
   const [screenshotLetterKey, setScreenshotLetterKey] = useState('T');
   const [isConfigChanged, setIsConfigChange] = useState(false); //True if any changes have been made to the initial configuration
   const [isApiKeyValid, setIsApiKeyValid] = useState(true); //Controls feedback message in case the API key is not valid
-  const [openIaModels, setOpenAiModels] = useState([]); //List of OpenAI models available for dropdown
-  const [selectedOpenAiModel, setSelectedOpenAiModel] = useState(); //Selected model from the OpenAI model dropdown
 
   useEffect(() => {
     setIsConfigChange(false); //When loading a new configuration from the main thread, we assume no changes have been made yet
@@ -71,9 +69,6 @@ const Config = () => {
       setPrompts(config.prompts);
       setScreenshotModifierKey(config.screenshotModifierKey);
       setScreenshotLetterKey(config.screenshotLetterKey);
-      setOpenAiModels(config.openIaModels);
-      setSelectedOpenAiModel(config.selectedOpenAiModel);
-
       setLoading(false); //We have completed the initial load of configurations
     }
   }, [config]);
@@ -91,9 +86,6 @@ const Config = () => {
       if (screenshotLetterKey !== config.screenshotLetterKey) {
         changeInForm = true;
       }
-      if (selectedOpenAiModel !== config.selectedOpenAiModel) {
-        changeInForm = true;
-      }
       changeInForm = changeInForm 
         || prompts.length != config.prompts.length 
         || prompts.filter((prompt, index) => config.prompts[index] !== prompt).length > 0;
@@ -104,8 +96,7 @@ const Config = () => {
     openaiApiKey,
     screenshotModifierKey,
     screenshotLetterKey,
-    prompts,
-    selectedOpenAiModel
+    prompts
   ]);
 
   //To remove the invalid API Key alert message when the input is cleared
@@ -125,10 +116,6 @@ const Config = () => {
 
   const handleScreenshotLetterChange = (event) => {
     setScreenshotLetterKey(event.target.value.toUpperCase());
-  };
-
-  const handleSelectedOpenAiModelChange = (value) => {
-    setSelectedOpenAiModel(value);
   };
   
   const addNewPrompt = () => {
@@ -161,8 +148,7 @@ const Config = () => {
   const onApplyConfig = async () => {
     //Settings that will always be selected
     const newConfig = {
-      screenshotModifierKey: screenshotModifierKey,
-      selectedOpenAiModel: selectedOpenAiModel,
+      screenshotModifierKey: screenshotModifierKey
     };
 
     //Asynchronously validate that the API Key is valid
