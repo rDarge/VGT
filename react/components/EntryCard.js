@@ -3,21 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import TranslationCard from './TranslationCard';
+import RawTextCard from './RawTextCard';
 
 const EntryCard = ({ entry, config }) => {
-  const [text, setText] = useState(entry.text);
-
-  useEffect(() => {
-    setText(entry.text);
-  }, [entry.text]);
-
+  
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
   };
 
-  const updateEntryText = (event) => {
-    setText(event.target.value);
-    const textObj = { id: entry.id, text: event.target.value };
+  const updateText = (id, updatedText) => {
+    const textObj = { id: id, text: updatedText };
     ipcRenderer.send('updateEntryText', textObj);
   }
 
@@ -28,7 +23,7 @@ const EntryCard = ({ entry, config }) => {
   return (
     <Card
       bordered={false}
-      style={{ maxHeight: '150px' }}
+      style={{ maxHeight: '350px' }}
       bodyStyle={{ maxHeight: '100%', padding: '10px' }}
     >
       <Row gutter={10} style={{ height: '100%' }}>
@@ -73,7 +68,7 @@ const EntryCard = ({ entry, config }) => {
               borderRadius: '10px',
             }}
           >
-            <Image style={{ maxHeight: '105px' }} src={entry.img} />
+            <Image style={{ maxHeight: '300px' }} src={entry.img} />
           </div>
         </Col>
         <Col
@@ -84,40 +79,19 @@ const EntryCard = ({ entry, config }) => {
             justifyContent: 'space-between',
           }}
         >
-          <div
-            style={{
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-            }}
-          >
-            <div style={{ fontWeight: 'bold', fontSize: '12px' }}>
-              Raw text{' '}
-              <Typography.Text
-                code
-                style={{ fontSize: '10px', verticalAlign: 'text-bottom' }}
-              >
-                (Manga-OCR)
-              </Typography.Text>
-            </div>
-            {entry.text ? (
-              <Input.TextArea
-                style={{ flexGrow: '1', resize: 'none' }}
-                value={text}
-                onChange={updateEntryText}
-              />
-            ) : (
-              <Spin />
-            )}
-          </div>
+          <RawTextCard
+            text={entry.text}
+            onChange={(updatedText)=>updateText(entry.id, updatedText)}
+            ocrCallback={() => ocrEntry(entry.id)}
+            config={config}
+          />
         </Col>
         <Col span={8} style={{ display: 'flex', height: '100%' }}>
-            <TranslationCard 
-              translation={entry.trad} 
-              translateCallback={() => translateEntry(entry.id)} 
-              config={config}
-            />
+          <TranslationCard
+            translation={entry.trad}
+            translateCallback={() => translateEntry(entry.id)}
+            config={config}
+          />
         </Col>
       </Row>
     </Card>

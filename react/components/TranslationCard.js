@@ -172,6 +172,7 @@ const TranslationCard = ({ translation, translateCallback, config }) => {
             style={{ flexGrow: '1', resize: 'none' }}
             disabled={history.length == 0}
             value={history[page - 1]?.text || TRANSLATION_HINT}
+            autoSize={{maxRows: 10}}
           />
         </Tooltip>}
   </div>
