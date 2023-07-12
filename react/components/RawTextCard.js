@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
 import React, { useState, useEffect } from 'react';
 import { Button, Input, Spin, Typography, Pagination, Tooltip, Select, Switch } from 'antd';
-import { ClearOutlined, LikeOutlined } from '@ant-design/icons';
+import { ClearOutlined, LikeOutlined, RedoOutlined } from '@ant-design/icons';
 
 const OCR_OPTIONS = [
   {
@@ -17,12 +17,17 @@ const OCR_OPTIONS = [
 const RawTextCard = ({ text: entryText, onChange, ocrCallback, config }) => {
   const [localText, setLocalText] = useState(entryText);
   const [autoClean, setAutoClean] = useState(true);
+  const [thinking, setThinking] = useState(true);
 
   useEffect(() => {
     if (entryText && autoClean) {
       setLocalText(cleanText(entryText));
     } else {
       setLocalText(entryText);
+    }
+
+    if (entryText) {
+      setThinking(false);
     }
   }, [entryText]);
 
@@ -31,12 +36,19 @@ const RawTextCard = ({ text: entryText, onChange, ocrCallback, config }) => {
     onChange(event.target.value);
   }
 
+  const rescanEntry = () => {
+    setLocalText("");
+    setThinking(true);
+    ocrCallback();
+  };
+
   const toggleCleanEntry = (checked) => {
     setAutoClean(checked);
     if (checked) {
       setLocalText(cleanText(localText));
     } else {
-      //TODO call OCR again
+      onChange("");
+      rescanEntry();
     }
   }
 
@@ -54,6 +66,7 @@ const RawTextCard = ({ text: entryText, onChange, ocrCallback, config }) => {
         selectedOcrMode: newMode.value
       };
       ipcRenderer.send('setConfig', newConfig);
+      rescanEntry();
     }
   }
 
@@ -72,6 +85,7 @@ const RawTextCard = ({ text: entryText, onChange, ocrCallback, config }) => {
           onChange={onChangeMode}
           size='small'
           defaultValue={config.selectedOcrMode}
+          disabled={thinking}
           options={OCR_OPTIONS} />
         <Tooltip title={"Remove whitespace between characters"} >
           <Switch
@@ -82,12 +96,16 @@ const RawTextCard = ({ text: entryText, onChange, ocrCallback, config }) => {
           />
         </Tooltip>
       </div>
-      <Input.TextArea
-        style={{ flexGrow: '1', resize: 'none' }}
-        value={localText}
-        autoSize={{ maxRows: 10 }}
-        onChange={updateText}
-      />
+      {thinking ? (
+        <Spin />
+      ) : (
+        <Input.TextArea
+          style={{ flexGrow: '1', resize: 'none' }}
+          value={localText}
+          autoSize={{ maxRows: 10 }}
+          onChange={updateText}
+        />
+      )}
     </div>
   );
 }

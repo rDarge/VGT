@@ -108,11 +108,16 @@ async def translate_dataurl_img(data: dict):
         mocr = MangaOcr()
     imagen_decodificada = base64.b64decode(data["img"].split(",")[1])
     with Image.open(io.BytesIO(imagen_decodificada)) as image:
-        if image.mode != 'RGBA':
-            image = image.convert('RGBA')
-        result = await recognize_bytes(image.tobytes(), image.width, image.height, 'ja')
-        text = result.text
-        # text = mocr(image)
+        mode = data["config"]["selectedOcrMode"]
+        if mode == "winOCR":
+            if image.mode != 'RGBA':
+                image = image.convert('RGBA')
+            result = await recognize_bytes(image.tobytes(), image.width, image.height, 'ja')
+            text = result.text
+        elif mode == "mangaOCR":
+            text = mocr(image)
+        else:
+            text = "invalid OCR provided: " + mode + " is not recognized."
     return {"id": data["id"], "text": text}
 
 

@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, updateItemTextById, translateItemById } = require('./storeHandler');
+const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -114,10 +114,13 @@ function ipcHandler() {
   });
   ipcMain.on('translateEntry', (_e, entryId) => {
     translateItemById(entryId);
-  })
+  });
   ipcMain.on('updateEntryText', (_e, textObj) => {
     updateItemTextById(textObj);
-  })
+  });
+  ipcMain.on('scanEntry', (_e, entryId) => {
+    scanItemById(entryId);
+  });
 
   /*
    * Screen Capture Events

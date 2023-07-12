@@ -25,6 +25,11 @@ function deleteItemById(id) {
   eventEmitter.emit('entryDeleted', id);
 }
 
+function scanItemById(id) {
+  delete items[id]['text'];
+  addImgToProcess(items[id], addTextToImg);
+}
+
 function translateItemById(id) {
   delete items[id]['trad'];
   eventEmitter.emit('entryTranslated', id);
@@ -45,13 +50,13 @@ function addNewEntry(imgObj) {
 }
 
 function addTextToImg(textObj) {
-  console.log('Guardando texto detectado');
+  console.log('Saving detected text');
   items[textObj.id]['text'] = textObj.text;
   eventEmitter.emit('newText', textObj);
 }
 
 function addTraductionToImg(tradObj) {
-  console.log('Guardando texto traducido');
+  console.log('Saving translated text');
   items[tradObj.id]['trad'] = tradObj.trad;
   eventEmitter.emit('newTrad', tradObj);
 }
@@ -117,4 +122,5 @@ module.exports = {
   translateItemById,
   updateItemTextById,
   cleanAll,
+  scanItemById,
 };

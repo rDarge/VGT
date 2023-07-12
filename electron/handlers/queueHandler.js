@@ -60,8 +60,8 @@ function addImgToProcess(imgObj, callback) {
   queue.push(processImg(imgObj, callback));
 }
 
-function addTextToTraduction(textObk, callback) {
-  queue.push(traductionText(textObk, callback));
+function addTextToTraduction(textObj, callback) {
+  queue.push(traductionText(textObj, callback));
 }
 
 module.exports = {

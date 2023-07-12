@@ -19,6 +19,10 @@ const EntryCard = ({ entry, config }) => {
   const translateEntry = (id) => {
     ipcRenderer.send('translateEntry', id);
   }
+  
+  const scanEntry = (id) => {
+    ipcRenderer.send('scanEntry', id);
+  }
 
   return (
     <Card
@@ -82,7 +86,7 @@ const EntryCard = ({ entry, config }) => {
           <RawTextCard
             text={entry.text}
             onChange={(updatedText)=>updateText(entry.id, updatedText)}
-            ocrCallback={() => ocrEntry(entry.id)}
+            ocrCallback={() => scanEntry(entry.id)}
             config={config}
           />
         </Col>
