@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById } = require('./storeHandler');
+const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -11,6 +11,7 @@ const {
   getSelectedOpenAiModelProprieties
 } = require('../helpers/config');
 const { reloadCaptureWinShortcutHandler } = require('./shortcutsHandler');
+const { createCaptureWindow } = require('../windows/winCapture');
 
 function getScreenDetails(display) {
   const width = Math.floor(display.size.width * display.scaleFactor);
@@ -118,8 +119,18 @@ function ipcHandler() {
   ipcMain.on('updateEntryText', (_e, textObj) => {
     updateItemTextById(textObj);
   });
+  ipcMain.on('updateSectionText', (_e, textObj) => {
+    updateSectionTextById(textObj);
+  });
   ipcMain.on('scanEntry', (_e, entryId) => {
     scanItemById(entryId);
+  });
+  ipcMain.on('startTextCapture', (_e, entryId) => {
+    createCaptureWindow();
+    updateEntry = entryId;
+  });
+  ipcMain.on('stopTextCapture', (_e) => {
+    updateEntry = null;
   });
 
   /*
@@ -128,6 +139,7 @@ function ipcHandler() {
   let screenDetails = null;
   let p1Coords = null;
   let p2Coords = null;
+  let updateEntry = null;
 
   ipcMain.on('event/mousedown', () => {
     const dipPoint = screen.getCursorScreenPoint();
@@ -179,18 +191,30 @@ function ipcHandler() {
       const img = chosenSource.thumbnail.crop(captureRectZone).toDataURL();
 
       //Save the image with a unique ID and specify the model selected at the time of capture
-      addNewEntry({
-        id: uuid.v4(),
-        img: img,
-        selectedModel: getSelectedOpenAiModelProprieties(),
-      });
-
-      //Close all capture windows.
-      BrowserWindow.getAllWindows().forEach((win) => {
-        if (win.title.startsWith("capture")) {
-          win.close();
+      if(updateEntry != null) {
+        const addedSuccessfully = appendCaptureToEntry({
+          id: uuid.v4(),
+          entryId: updateEntry,
+          img: img,
+        }); 
+        if(!addedSuccessfully){
+          //In certain cases the "updateEntry" record may become stale. 
+          updateEntry = null;
         }
-      });
+      } else {
+        addNewEntry({
+          id: uuid.v4(),
+          img: img,
+          selectedModel: getSelectedOpenAiModelProprieties(),
+        });
+
+        //Close all capture windows.
+        BrowserWindow.getAllWindows().forEach((win) => {
+          if (win.title.startsWith("capture")) {
+            win.close();
+          }
+        });
+      }
     }
     p1Coords = null;
     p2Coords = null;

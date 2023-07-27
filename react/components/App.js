@@ -11,6 +11,8 @@ import {
   updateFirstInitReady,
   updateInitModelSequenceReady,
   updateBackendTerminalStreaming,
+  addSectionText,
+  addNewSection,
 } from './state';
 
 const App = () => {
@@ -19,6 +21,9 @@ const App = () => {
     //When there is a new entry (image) received in the main thread
     ipcRenderer.on('newEntry', (e, newEntry) => {
       addNewEntry(newEntry);
+    });
+    ipcRenderer.on('newSection', (e, newSection) => {
+      addNewSection(newSection);
     });
     //When an entry is deleted
     ipcRenderer.on('entryDeleted', (e, entryId) => {
@@ -32,6 +37,9 @@ const App = () => {
     ipcRenderer.on('addText', (e, newText) => {
       addText(newText);
     });
+    ipcRenderer.on('addSectionText', (e, newText) => {
+      addSectionText(newText);
+    })
     //When the main thread has a new translation ready
     ipcRenderer.on('addTrad', (e, newTrad) => {
       addTrad(newTrad);

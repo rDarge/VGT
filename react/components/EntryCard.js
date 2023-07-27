@@ -1,12 +1,12 @@
 const { ipcRenderer } = require('electron');
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Row, Col, Image, Input, Spin, Typography } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { Button, Card, Row, Col, Image, Input, Spin, Typography, Space } from 'antd';
+import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
 import TranslationCard from './TranslationCard';
 import RawTextCard from './RawTextCard';
 
 const EntryCard = ({ entry, config }) => {
-  
+
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
   };
@@ -19,9 +19,34 @@ const EntryCard = ({ entry, config }) => {
   const translateEntry = (id) => {
     ipcRenderer.send('translateEntry', id);
   }
-  
+
   const scanEntry = (id) => {
     ipcRenderer.send('scanEntry', id);
+  }
+
+  const startTextCapture = (id) => {
+    console.log('startTextCapture react');
+    ipcRenderer.send('startTextCapture', id);
+  }
+
+  const onPreviewChange = (visible) => {
+    console.log("Preview changed: ", visible);
+    if (!visible) {
+      ipcRenderer.send('stopTextCapture');
+    }
+  }
+
+  const updateTextInPreview = (entryId, sectionIndex, updatedText) => {
+    if (sectionIndex == 0) {
+      updateText(entryId, updatedText);
+    } else {
+      const textObj = {
+        entryId,
+        id: entry.meta.sections[sectionIndex-1].id,
+        text: updatedText
+      }
+      ipcRenderer.send('updateSectionText', textObj);
+    }
   }
 
   return (
@@ -72,7 +97,46 @@ const EntryCard = ({ entry, config }) => {
               borderRadius: '10px',
             }}
           >
-            <Image style={{ maxHeight: '300px' }} src={entry.img} />
+            <Image.PreviewGroup items={[
+              entry.img,
+              ...entry.meta.sections.map(section => section.img)
+            ]}
+              preview={{
+                toolbarRender: (
+                  _,
+                  {
+                    transform: { scale },
+                    actions: { onZoomOut, onZoomIn },
+                  }
+                ) => (
+                  <Space size={12} className="toolbar-wrapper">
+                    <ScanOutlined onClick={() => startTextCapture(entry.id)} />
+                    <ZoomOutOutlined disabled={scale === 1} onClick={onZoomOut} />
+                    <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
+                  </Space>
+                ),
+                imageRender: (original, { transform: { scale }, current }) => (
+                  <div>
+                    <p>{current == 0 ? "Full Panel" : `Dialog ${current}`}</p>
+                    {original}
+                    <Input.TextArea
+                      style={{ flexGrow: '1', resize: 'none' }}
+                      value={current == 0 ? entry.text : entry.meta.sections[current - 1]?.text}
+                      autoSize={{ maxRows: 10 }}
+                      onChange={(event) => updateTextInPreview(entry.id, current, event.target.value)}
+                    />
+
+                  </div>
+                ),
+                onVisibleChange: onPreviewChange
+              }}
+            >
+              <Image
+                style={{ maxHeight: '300px' }}
+                src={entry.img}
+
+              />
+            </Image.PreviewGroup>
           </div>
         </Col>
         <Col
@@ -85,7 +149,7 @@ const EntryCard = ({ entry, config }) => {
         >
           <RawTextCard
             text={entry.text}
-            onChange={(updatedText)=>updateText(entry.id, updatedText)}
+            onChange={(updatedText) => updateText(entry.id, updatedText)}
             ocrCallback={() => scanEntry(entry.id)}
             config={config}
           />

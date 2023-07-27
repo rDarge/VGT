@@ -10,7 +10,7 @@ function sleep(ms) {
 
 async function checkBackend() {
   let failCount = 0;
-  while (failCount < 10) {
+  while (failCount < 20) {
     try {
       const res = await axios.get('http://localhost:8000/check');
       if (res.status === 200) {

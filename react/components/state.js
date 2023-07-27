@@ -17,6 +17,14 @@ export const addNewEntry = (newEntry) => {
   });
 };
 
+export const addNewSection = (newSection) => {
+  setGlobalState('entries', (oldEntries) => {
+    const newObjAux = { ...oldEntries };
+    newObjAux[newSection.entryId].meta.sections.push(newSection);
+    return newObjAux;
+  });
+};
+
 export const deleteEntry = (entryId) => {
   setGlobalState('entries', (oldEntries) => {
     const newObjAux = { ...oldEntries };
@@ -37,6 +45,18 @@ export const addText = (newText) => {
   setGlobalState('entries', (oldEntries) => {
     const newObjAux = { ...oldEntries };
     newObjAux[newText.id]['text'] = newText.text;
+    return newObjAux;
+  });
+};
+
+
+export const addSectionText = (newText) => {
+  console.log("New Text is", newText);
+  setGlobalState('entries', (oldEntries) => {
+    console.log("oldEntries", oldEntries);
+    const newObjAux = { ...oldEntries };
+    newObjAux[newText.entryId].meta.sections.filter(section => section.id === newText.id)[0].text = newText.text;
+    console.log("Added section text: ", newObjAux);
     return newObjAux;
   });
 };

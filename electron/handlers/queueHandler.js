@@ -28,7 +28,7 @@ async function processImg(imgObj, callback) {
   } catch (e) {
     console.log(e);
   }
-  callback({ id: imgObj.id, text: text });
+  callback({ ...imgObj, text: text });
 }
 
 async function traductionText(textObj, callback) {

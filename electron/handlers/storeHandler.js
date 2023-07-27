@@ -41,12 +41,46 @@ function updateItemTextById(textObj) {
   eventEmitter.emit('newText', textObj);
 }
 
+function updateSectionTextById(textObj) {
+  const entry = items[textObj.entryId];
+  entry.meta.sections.filter(section => section.id === textObj.id)[0].text = textObj.text;
+  eventEmitter.emit('newSectionText', textObj);
+
+  //Also update top level text to reflect the change in this section
+  refreshEntryText(textObj.entryId);
+}
+
+function refreshEntryText(entryId) {
+  const entry = items[entryId];
+  entry.text = entry.meta.sections.map(section => section.text).reduce((acc, curr) => acc + curr);
+  eventEmitter.emit('newText', {
+    id: entry.id,
+    text: entry.text
+  });
+}
+
+function appendCaptureToEntry(captureObj) {
+  console.log("adding capture to image", captureObj.entryId);
+  const entry = items[captureObj.entryId];
+  if(entry) {
+    entry.meta.sections.push(captureObj);
+    eventEmitter.emit('newSectionAdded', captureObj);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function addNewEntry(imgObj) {
   console.log('Guardando nueva imagen');
-  imgObj['text'] = null;
-  imgObj['trad'] = null;
-  items[imgObj.id] = imgObj;
-  eventEmitter.emit('newEntryAdded', imgObj);
+  const newEntry = { ...imgObj,
+    meta: {
+      sections: [],
+      history: []
+    }
+  }
+  items[imgObj.id] = newEntry;
+  eventEmitter.emit('newEntryAdded', newEntry);
 }
 
 function addTextToImg(textObj) {
@@ -55,64 +89,62 @@ function addTextToImg(textObj) {
   eventEmitter.emit('newText', textObj);
 }
 
+function addTextToSection(sectionObj) {
+  console.log('Saving scanned text for section');
+  const sections = items[sectionObj.entryId].meta.sections;
+  const section = sections.filter(section => section.id === sectionObj.id)[0];
+  section.text = sectionObj.text;
+  eventEmitter.emit('newSectionText', sectionObj);
+  refreshEntryText(sectionObj.entryId);
+}
+
 function addTraductionToImg(tradObj) {
   console.log('Saving translated text');
   items[tradObj.id]['trad'] = tradObj.trad;
   eventEmitter.emit('newTrad', tradObj);
 }
 
+function sendToFront(message, object) { 
+  BrowserWindow.getAllWindows().forEach((win) => {
+    if (win.title === 'Visual-GPT-Translator') {
+      win.webContents.send(message, object);
+    }
+  });
+}
+
 //If a new image is added, send it to the frontend and add it to the list
 //Then add it to the list for OCR processing
 eventEmitter.on('newEntryAdded', (imgObj) => {
-  //Send it to the main screen TODO: Optimize to reduce iteration?
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.title === 'Visual-GPT-Translator') {
-      win.webContents.send('newEntry', imgObj);
-    }
-  });
-
-  //Start OCR process
+  sendToFront('newEntry', imgObj);
   addImgToProcess(imgObj, addTextToImg);
 });
 
+eventEmitter.on('newSectionAdded', (sectionObj) => {
+  sendToFront('newSection', sectionObj);
+  addImgToProcess(sectionObj, addTextToSection);
+})
+
 //When an image has gone through OCR
 eventEmitter.on('newText', (textObj) => {
-  //Send to the main screen TODO: Optimize to reduce iteration?
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.title === 'Visual-GPT-Translator') {
-      win.webContents.send('addText', textObj);
-    }
-  });
+  sendToFront('addText', textObj);
 });
 
+eventEmitter.on('newSectionText', (textObj) => {
+  sendToFront('addSectionText', textObj);
+});
 //When an image has its text and translation
 eventEmitter.on('newTrad', (tradObj) => {
-  //Send to the main screen TODO: Optimize to reduce iteration?
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.title === 'Visual-GPT-Translator') {
-      win.webContents.send('addTrad', tradObj);
-    }
-  });
+  sendToFront('addTrad', tradObj);
 });
 
 //When an entry is removed
 eventEmitter.on('entryDeleted', (entryId) => {
-  //Send to the main screen TODO: Optimize to reduce iteration?
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.title === 'Visual-GPT-Translator') {
-      win.webContents.send('entryDeleted', entryId);
-    }
-  });
+  sendToFront('entryDeleted', entryId);
 });
 
 //When an entry translation is retried
 eventEmitter.on('entryTranslated', (entryId) => {
-  //Send to the main screen TODO: Optimize to reduce iteration?
-  BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.title === 'Visual-GPT-Translator') {
-      win.webContents.send('entryTranslated', entryId);
-    }
-  });
+  sendToFront('entryTranslated', entryId);
 });
 
 module.exports = {
@@ -123,4 +155,6 @@ module.exports = {
   updateItemTextById,
   cleanAll,
   scanItemById,
+  appendCaptureToEntry,
+  updateSectionTextById,
 };
