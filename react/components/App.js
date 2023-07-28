@@ -13,6 +13,7 @@ import {
   updateBackendTerminalStreaming,
   addSectionText,
   addNewSection,
+  deleteSection,
 } from './state';
 
 const App = () => {
@@ -28,6 +29,9 @@ const App = () => {
     //When an entry is deleted
     ipcRenderer.on('entryDeleted', (e, entryId) => {
       deleteEntry(entryId);
+    });
+    ipcRenderer.on('sectionDeleted', (e, deleteSectionPayload) => {
+      deleteSection(deleteSectionPayload);
     });
     //When an entry translation is retried
     ipcRenderer.on('entryTranslated', (e, entryId) => {

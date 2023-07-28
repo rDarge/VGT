@@ -11,6 +11,14 @@ const EntryCard = ({ entry, config }) => {
     ipcRenderer.send('deleteEntry', entryId);
   };
 
+  const onDeleteFromPreview = (sectionIndex) => { 
+    const payload = {
+      entryId: entry.id, 
+      sectionId: entry.meta.sections[sectionIndex].id
+    }
+    ipcRenderer.send('deleteSection', payload);
+  }
+
   const updateText = (id, updatedText) => {
     const textObj = { id: id, text: updatedText };
     ipcRenderer.send('updateEntryText', textObj);
@@ -107,12 +115,14 @@ const EntryCard = ({ entry, config }) => {
                   {
                     transform: { scale },
                     actions: { onZoomOut, onZoomIn },
+                    current
                   }
                 ) => (
                   <Space size={12} className="toolbar-wrapper">
                     <ScanOutlined onClick={() => startTextCapture(entry.id)} />
                     <ZoomOutOutlined disabled={scale === 1} onClick={onZoomOut} />
                     <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
+                    <DeleteOutlined disabled={current === 0} onClick={() => onDeleteFromPreview(current-1)} />
                   </Space>
                 ),
                 imageRender: (original, { transform: { scale }, current }) => (
@@ -120,7 +130,7 @@ const EntryCard = ({ entry, config }) => {
                     <p>{current == 0 ? "Full Panel" : `Dialog ${current}`}</p>
                     {original}
                     <Input.TextArea
-                      style={{ flexGrow: '1', resize: 'none' }}
+                      className="preview-text"
                       value={current == 0 ? entry.text : entry.meta.sections[current - 1]?.text}
                       autoSize={{ maxRows: 10 }}
                       onChange={(event) => updateTextInPreview(entry.id, current, event.target.value)}

@@ -23,20 +23,16 @@ const Capture = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
-    function drawRectangle() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Set the background color to transparent blue
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.clearRect(
-        startCoords.x,
-        startCoords.y,
-        endCoords.x - startCoords.x,
-        endCoords.y - startCoords.y,
-      );
-    }
-    if (isDrawing) {
-      drawRectangle();
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Set the background color to transparent blue
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(
+      startCoords.x,
+      startCoords.y,
+      endCoords.x - startCoords.x,
+      endCoords.y - startCoords.y,
+    );
+
   }, [isDrawing, startCoords, endCoords]);
 
   async function handleMouseDown(event) {
@@ -65,9 +61,9 @@ const Capture = () => {
   const handleMouseUp = async () => {
     ipcRenderer.send('event/mouseup');
     setIsDrawing(false);
-    //TODO: Put some sort of loading icon?
     await ipcRenderer.invoke('captureScreenshot');
-    ipcRenderer.send('closeCaptureWin');
+    setStartCoords({x: 0, y: 0});
+    setEndCoords({x: 0, y: 0});
   };
 
   return (

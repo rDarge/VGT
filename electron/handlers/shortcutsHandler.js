@@ -10,7 +10,7 @@ const {
 function reloadCaptureWinShortcutHandler() {
   //Close any capture window that is already open
   BrowserWindow.getAllWindows().forEach((win) => {
-    if (win.title === 'capture') {
+    if (win.title.startsWith('capture')) {
       win.close();
     }
   });
@@ -31,7 +31,7 @@ function createCaptureWinShortcutHandler() {
     //Check to see if the capture window already exists
     let captureIsDisplayed = false;
     BrowserWindow.getAllWindows().forEach((win) => {
-      if (win.title === 'capture') {
+      if (win.title.startsWith('capture')) {
         captureIsDisplayed = true;
       }
     });

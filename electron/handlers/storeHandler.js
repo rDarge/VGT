@@ -25,6 +25,16 @@ function deleteItemById(id) {
   eventEmitter.emit('entryDeleted', id);
 }
 
+function deleteSectionById(deleteSectionPayload) {
+  const sectionId = deleteSectionPayload.sectionId;
+  const entryId = deleteSectionPayload.entryId;
+  const sections = items[entryId].meta.sections;
+  const index = sections.findIndex(section => section.id === sectionId);
+  sections.splice(index, 1);
+  eventEmitter.emit('sectionDeleted', deleteSectionPayload)
+  refreshEntryText(entryId);
+}
+
 function scanItemById(id) {
   delete items[id]['text'];
   addImgToProcess(items[id], addTextToImg);
@@ -142,6 +152,11 @@ eventEmitter.on('entryDeleted', (entryId) => {
   sendToFront('entryDeleted', entryId);
 });
 
+//When a section is removed
+eventEmitter.on('sectionDeleted', (deleteSectionPayload) => {
+  sendToFront('sectionDeleted', deleteSectionPayload);
+});
+
 //When an entry translation is retried
 eventEmitter.on('entryTranslated', (entryId) => {
   sendToFront('entryTranslated', entryId);
@@ -157,4 +172,5 @@ module.exports = {
   scanItemById,
   appendCaptureToEntry,
   updateSectionTextById,
+  deleteSectionById,
 };

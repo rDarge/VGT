@@ -33,6 +33,20 @@ export const deleteEntry = (entryId) => {
   });
 };
 
+
+export const deleteSection = (deleteSectionPayload) => {
+  const sectionId = deleteSectionPayload.sectionId;
+  const entryId = deleteSectionPayload.entryId;
+  
+  setGlobalState('entries', (oldEntries) => {
+    const newObjAux = { ...oldEntries };
+    const sections = newObjAux[entryId].meta.sections;
+    const index = sections.findIndex(section => section.id === sectionId);
+    sections.splice(index, 1);
+    return newObjAux;
+  });
+};
+
 export const translateEntry = (entryId) => {
   setGlobalState('entries', (oldEntries) => {
     const newObjAux = { ...oldEntries};

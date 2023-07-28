@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById } = require('./storeHandler');
+const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -113,6 +113,9 @@ function ipcHandler() {
   ipcMain.on('deleteEntry', (_e, entryId) => {
     deleteItemById(entryId);
   });
+  ipcMain.on('deleteSection', (_e, deleteSectionPayload) => {
+    deleteSectionById(deleteSectionPayload);
+  });
   ipcMain.on('translateEntry', (_e, entryId) => {
     translateItemById(entryId);
   });
@@ -220,14 +223,6 @@ function ipcHandler() {
     p2Coords = null;
     screenDetails = null;
     return;
-  });
-
-  ipcMain.on('closeCaptureWin', () => {
-    BrowserWindow.getAllWindows().forEach((win) => {
-      if (win.title === 'capture') {
-        win.close();
-      }
-    });
   });
 }
 
