@@ -14,11 +14,15 @@ import {
   addSectionText,
   addNewSection,
   deleteSection,
+  deleteAllEntries,
 } from './state';
 
 const App = () => {
   //Main to React event bridge
   useEffect(() => {
+    ipcRenderer.on('allCleaned', (e, entryId) => {
+      deleteAllEntries();
+    });
     //When there is a new entry (image) received in the main thread
     ipcRenderer.on('newEntry', (e, newEntry) => {
       addNewEntry(newEntry);

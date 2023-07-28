@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById } = require('./storeHandler');
+const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById, cleanAll } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -106,6 +106,11 @@ function ipcHandler() {
       }
     });
   });
+
+  ipcMain.on('reset', async () => {
+    updateEntry = null;
+    cleanAll();
+  })
 
   /*
    * Mode 1 Panel Events

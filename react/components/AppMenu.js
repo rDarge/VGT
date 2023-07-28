@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu } from 'antd';
+import { Button, Menu } from 'antd';
+import { ipcRenderer } from 'electron';
+import { RedoOutlined } from '@ant-design/icons';
+
 
 const AppMenu = () => {
   const [current, setCurrent] = useState('mode1');
@@ -8,9 +11,13 @@ const AppMenu = () => {
   const location = useLocation();
 
   const onClick = (e) => {
-    setCurrent(e.key);
+    if(e.key === "/reset") {
+      ipcRenderer.send('reset');
+    } else {
+      setCurrent(e.key);
+    }
   };
-
+  
   useEffect(() => {
     if (current !== location.pathname) {
       setCurrent(location.pathname);
@@ -32,7 +39,11 @@ const AppMenu = () => {
         <Menu.Item key="/config">
           <Link to="/config">Config</Link>
         </Menu.Item>
+        <Menu.Item key="/reset">
+          <RedoOutlined style={{ fontSize: '14px' }} />
+        </Menu.Item>
       </Menu>
+      
     </div>
   );
 };

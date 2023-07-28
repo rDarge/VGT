@@ -1,19 +1,22 @@
 const { ipcRenderer } = require('electron');
 import React, { useState, useEffect } from 'react';
 import { Button, Card, Row, Col, Image, Input, Spin, Typography, Space } from 'antd';
-import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined } from '@ant-design/icons';
+import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
 import TranslationCard from './TranslationCard';
 import RawTextCard from './RawTextCard';
+import StickyText from './StickyText';
 
 const EntryCard = ({ entry, config }) => {
+  const [hideToolbar, setHideToolbar] = useState(false);
+  const [minimizeToolbar, setMinimizeToolbar] = useState(false);
 
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
   };
 
-  const onDeleteFromPreview = (sectionIndex) => { 
+  const onDeleteFromPreview = (sectionIndex) => {
     const payload = {
-      entryId: entry.id, 
+      entryId: entry.id,
       sectionId: entry.meta.sections[sectionIndex].id
     }
     ipcRenderer.send('deleteSection', payload);
@@ -34,6 +37,8 @@ const EntryCard = ({ entry, config }) => {
 
   const startTextCapture = (id) => {
     console.log('startTextCapture react');
+    setHideToolbar(true);
+    setTimeout(() => setHideToolbar(false), 1000);
     ipcRenderer.send('startTextCapture', id);
   }
 
@@ -48,9 +53,10 @@ const EntryCard = ({ entry, config }) => {
     if (sectionIndex == 0) {
       updateText(entryId, updatedText);
     } else {
+      entry.meta.sections[sectionIndex].text = updatedText;
       const textObj = {
         entryId,
-        id: entry.meta.sections[sectionIndex-1].id,
+        id: entry.meta.sections[sectionIndex - 1].id,
         text: updatedText
       }
       ipcRenderer.send('updateSectionText', textObj);
@@ -110,6 +116,7 @@ const EntryCard = ({ entry, config }) => {
               ...entry.meta.sections.map(section => section.img)
             ]}
               preview={{
+                minScale: 0,
                 toolbarRender: (
                   _,
                   {
@@ -117,25 +124,40 @@ const EntryCard = ({ entry, config }) => {
                     actions: { onZoomOut, onZoomIn },
                     current
                   }
-                ) => (
-                  <Space size={12} className="toolbar-wrapper">
-                    <ScanOutlined onClick={() => startTextCapture(entry.id)} />
-                    <ZoomOutOutlined disabled={scale === 1} onClick={onZoomOut} />
-                    <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
-                    <DeleteOutlined disabled={current === 0} onClick={() => onDeleteFromPreview(current-1)} />
-                  </Space>
-                ),
+                ) => {
+                  if (minimizeToolbar) {
+                    return <FullscreenOutlined 
+                      style={{padding: "12px 12px", backgroundColor: "rgba(0, 0, 0, 0.4)", borderRadius: "12px"}}
+                      onClick={() => setMinimizeToolbar(false)} 
+                      />;
+                  } else {
+                    return (
+                      <Space
+                        direction='vertical'
+                        className="toolbar-wrapper"
+                        style={{ display: hideToolbar ? 'none' : null }}
+                      >
+                        <StickyText
+                          className="preview-text"
+                          value={current == 0 ? entry.text : entry.meta.sections[current - 1]?.text}
+                          autoSize={{ maxRows: 10 }}
+                          onChange={(event) => updateTextInPreview(entry.id, current, event.target.value)}
+                        />
+                        <Space size={12}>
+                          <ScanOutlined onClick={() => startTextCapture(entry.id)} />
+                          <ZoomOutOutlined onClick={onZoomOut} />
+                          <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
+                          <DeleteOutlined disabled={current === 0} onClick={() => onDeleteFromPreview(current - 1)} />
+                          <FullscreenExitOutlined onClick={() => setMinimizeToolbar(true)} />
+                        </Space>
+                      </Space>
+                    )
+                  }
+                },
                 imageRender: (original, { transform: { scale }, current }) => (
                   <div>
                     <p>{current == 0 ? "Full Panel" : `Dialog ${current}`}</p>
                     {original}
-                    <Input.TextArea
-                      className="preview-text"
-                      value={current == 0 ? entry.text : entry.meta.sections[current - 1]?.text}
-                      autoSize={{ maxRows: 10 }}
-                      onChange={(event) => updateTextInPreview(entry.id, current, event.target.value)}
-                    />
-
                   </div>
                 ),
                 onVisibleChange: onPreviewChange
@@ -172,7 +194,7 @@ const EntryCard = ({ entry, config }) => {
           />
         </Col>
       </Row>
-    </Card>
+    </Card >
   );
 };
 

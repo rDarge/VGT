@@ -9,6 +9,13 @@ const initialState = {
 };
 const { setGlobalState, useGlobalState } = createGlobalState(initialState);
 
+
+export const deleteAllEntries = () => {
+  setGlobalState('entries', (oldEntries) => {
+    return {};
+  });
+};
+
 export const addNewEntry = (newEntry) => {
   setGlobalState('entries', (oldEntries) => {
     const newObjAux = { ...oldEntries };
