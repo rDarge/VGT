@@ -56,6 +56,7 @@ function updateItemTextById(textObj) {
 function updateSectionTextById(textObj) {
   const entry = items[textObj.entryId];
   entry.meta.sections.filter(section => section.id === textObj.id)[0].text = textObj.text;
+  console.log("maybe cant be sent to front", textObj);
   sendToFront('addSectionText', textObj);
 
   //Also update top level text to reflect the change in this section
@@ -64,11 +65,26 @@ function updateSectionTextById(textObj) {
 
 function refreshEntryText(entryId) {
   const entry = items[entryId];
-  entry.text = entry.meta.sections.map(section => section.text).reduce((acc, curr) => acc + "\n" + curr );
+  if(entry.meta.sections.length > 0) {
+    entry.text = entry.meta.sections
+      .map(section => (section.actorId ? (entry.meta.actors[section.actorId-1] || section.actorId) +":" : "" )+ section.text)
+      .reduce((acc, curr) => acc + "\n" + curr );
+  } else {
+    //Rescan original image...
+    addImgToProcess(entry, addTextToImg);
+  }
+  
   sendToFront('addText', {
     id: entry.id,
     text: entry.text
   });
+}
+
+function setSelectedActors(selectedActorsPayload) { 
+  const entry = items[selectedActorsPayload.entryId];
+  entry.meta.actors = selectedActorsPayload.actors;
+  sendToFront('updatedActors', selectedActorsPayload);
+  refreshEntryText(entry.id);
 }
 
 function appendCaptureToEntry(captureObj) {
@@ -89,7 +105,8 @@ function addNewEntry(imgObj) {
   const newEntry = { ...imgObj,
     meta: {
       sections: [],
-      history: []
+      history: [],
+      actors: []
     }
   }
   items[imgObj.id] = newEntry;
@@ -135,4 +152,5 @@ module.exports = {
   appendCaptureToEntry,
   updateSectionTextById,
   deleteSectionById,
+  setSelectedActors,
 };

@@ -1,7 +1,7 @@
 const { ipcRenderer } = require('electron');
-import React, { useState, useEffect } from 'react';
-import { Button, Card, Row, Col, Image, Input, Spin, Typography, Space } from 'antd';
-import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import React, { useState, useRef } from 'react';
+import { Button, Card, Row, Col, Image, Input, Select, Space, Divider } from 'antd';
+import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, FullscreenExitOutlined, PlusOutlined } from '@ant-design/icons';
 import TranslationCard from './TranslationCard';
 import RawTextCard from './RawTextCard';
 import StickyText from './StickyText';
@@ -9,6 +9,10 @@ import StickyText from './StickyText';
 const EntryCard = ({ entry, config }) => {
   const [hideToolbar, setHideToolbar] = useState(false);
   const [minimizeToolbar, setMinimizeToolbar] = useState(false);
+  const [actorName, setActorName] = useState('');
+  const [actorNames, setActorNames] = useState([...entry.meta.actors]);
+  const [selectedActors, setSelectedActors] = useState([...entry.meta.actors]);
+  const inputRef = useRef(null);
 
   const onDeleteEntry = (entryId) => {
     ipcRenderer.send('deleteEntry', entryId);
@@ -60,6 +64,35 @@ const EntryCard = ({ entry, config }) => {
         text: updatedText
       }
       ipcRenderer.send('updateSectionText', textObj);
+    }
+  }
+
+  const onActorNameChange = (event) => {
+    setActorName(event.target.value);
+  };
+
+  const addActorName = (e) => {
+    e.preventDefault();
+    setActorNames([...actorNames, actorName || `Actor ${actorNames.length + 1}`]);
+    setActorName('');
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 0);
+  };
+
+  const onChooseActor = (e) => {
+    const newSelectedActors = [...selectedActors, e];
+    setSelectedActors(newSelectedActors);
+    ipcRenderer.send('setSelectedActors', {entryId:entry.id, actors:newSelectedActors})
+  }
+
+  const onRemoveActor = (e) => {
+    const index = selectedActors.findIndex(name => name === e);
+    if(index >= 0) {
+      const newSelectedActors = [...selectedActors]
+      newSelectedActors.splice(index, 1);
+      setSelectedActors(newSelectedActors);
+      ipcRenderer.send('setSelectedActors', {entryId:entry.id, actors:newSelectedActors})
     }
   }
 
@@ -149,6 +182,36 @@ const EntryCard = ({ entry, config }) => {
                           <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
                           <DeleteOutlined disabled={current === 0} onClick={() => onDeleteFromPreview(current - 1)} />
                           <FullscreenExitOutlined onClick={() => setMinimizeToolbar(true)} />
+                          <Select
+                            popupClassName='preview-popup'
+                            style={{ width: 300 }}
+                            placeholder="Actor 1"
+                            mode='multiple'
+                            defaultValue={selectedActors}
+                            dropdownRender={(menu) => (
+                              <>
+                                {menu}
+                                <Divider style={{ margin: '8px 0' }} />
+                                <Space style={{ padding: '0 8px 4px' }}>
+                                  <Input
+                                    placeholder="Hero speaks"
+                                    ref={inputRef}
+                                    value={actorName}
+                                    onChange={onActorNameChange}
+                                  />
+                                  <Button type="text" icon={<PlusOutlined />} onClick={addActorName}>
+                                    Add item
+                                  </Button>
+                                </Space>
+                              </>
+                            )}
+                            options={actorNames.map((name) => {
+                              const index = selectedActors.indexOf(name) + 1;
+                              return ({ label: index > 0 ? index + "-" + name : name, value: name }) 
+                            })}
+                            onSelect={onChooseActor}
+                            onDeselect={onRemoveActor}
+                          />
                         </Space>
                       </Space>
                     )

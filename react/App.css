@@ -24,6 +24,10 @@ body {
   transform: translateX(-50%);
 }
 
+.preview-popup {
+  z-index: 1081;
+}
+
 .toolbar-wrapper .anticon {
   padding: 12px;
   cursor: pointer;

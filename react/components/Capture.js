@@ -1,6 +1,20 @@
 import React, { useRef, useState, useEffect } from 'react';
 const { ipcRenderer } = require('electron');
 
+const actorColors = {
+  null: 'rgba(163, 163, 194, 0.4)',
+  1: 'rgba(15, 165, 219, 0.4)',
+  2: 'rgba(219, 212, 15, 0.4)',
+  3: 'rgba(219, 141, 15, 0.4)',
+  4: 'rgba(219, 46, 15, 0.4)',
+  5: 'rgba(107, 15, 219, 0.4)',
+  6: 'rgba(182, 15, 219, 0.4)',
+  7: 'rgba(219, 15, 175, 0.4)',
+  8: 'rgba(219, 15, 90, 0.4)',  
+  9: 'rgba(35, 15, 219, 0.4)',  
+  0: 'rgba(15, 219, 171, 0.4)',
+}
+
 const Capture = () => {
   useEffect(() => {
     console.log('Capture Loaded');
@@ -10,12 +24,15 @@ const Capture = () => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
   const [endCoords, setEndCoords] = useState({ x: 0, y: 0 });
+  const [actorId, setActorId] = useState(null);
+
+  
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Set the background color to transparent blue
+    ctx.fillStyle = actorColors[actorId];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }, []);
 
@@ -24,7 +41,7 @@ const Capture = () => {
     const ctx = canvas.getContext('2d');
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'rgba(163, 163, 194, 0.4)'; // Set the background color to transparent blue
+    ctx.fillStyle = actorColors[actorId];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.clearRect(
       startCoords.x,
@@ -33,7 +50,17 @@ const Capture = () => {
       endCoords.y - startCoords.y,
     );
 
-  }, [isDrawing, startCoords, endCoords]);
+  }, [isDrawing, startCoords, endCoords, actorId]);
+
+  function handleKeyPress (event) { 
+    console.log("key ", event.key);
+    ["0","1","2","3","4","5","6","7","8","9"].forEach(n => {
+      if(event.key === n) {
+        setActorId(event.key);
+      }
+    });
+  }
+  window.addEventListener('keyup', handleKeyPress, true)
 
   async function handleMouseDown(event) {
     ipcRenderer.send('event/mousedown');
@@ -61,7 +88,7 @@ const Capture = () => {
   const handleMouseUp = async () => {
     ipcRenderer.send('event/mouseup');
     setIsDrawing(false);
-    await ipcRenderer.invoke('captureScreenshot');
+    await ipcRenderer.invoke('captureScreenshot', actorId);
     setStartCoords({x: 0, y: 0});
     setEndCoords({x: 0, y: 0});
   };

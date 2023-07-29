@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById, cleanAll } = require('./storeHandler');
+const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById, cleanAll, setSelectedActors } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -110,7 +110,7 @@ function ipcHandler() {
   ipcMain.on('reset', async () => {
     updateEntry = null;
     cleanAll();
-  })
+  });
 
   /*
    * Mode 1 Panel Events
@@ -140,6 +140,9 @@ function ipcHandler() {
   ipcMain.on('stopTextCapture', (_e) => {
     updateEntry = null;
   });
+  ipcMain.on('setSelectedActors', (_e, selectedActorsPayload) => {
+    setSelectedActors(selectedActorsPayload);
+  })
 
   /*
    * Screen Capture Events
@@ -148,6 +151,7 @@ function ipcHandler() {
   let p1Coords = null;
   let p2Coords = null;
   let updateEntry = null;
+  let actorIndex = 0;
 
   ipcMain.on('event/mousedown', () => {
     const dipPoint = screen.getCursorScreenPoint();
@@ -162,7 +166,7 @@ function ipcHandler() {
     p2Coords = getPointOnClosestScreen(dipPoint, display);
   });
 
-  ipcMain.handle('captureScreenshot', async () => {
+  ipcMain.handle('captureScreenshot', async (_e, actorId) => {
     if (p1Coords && p2Coords) {
       //Calculate the capture rectangle
       let xOrigin = p1Coords.x;
@@ -204,6 +208,7 @@ function ipcHandler() {
           id: uuid.v4(),
           entryId: updateEntry,
           img: img,
+          actorId: actorId
         }); 
         if(!addedSuccessfully){
           //In certain cases the "updateEntry" record may become stale. 
