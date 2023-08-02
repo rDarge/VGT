@@ -74,10 +74,17 @@ export const addText = (newText) => {
 export const addSectionText = (newText) => {
   console.log("New Text is", newText);
   setGlobalState('entries', (oldEntries) => {
-    console.log("oldEntries", oldEntries);
     const newObjAux = { ...oldEntries };
     newObjAux[newText.entryId].meta.sections.filter(section => section.id === newText.id)[0].text = newText.text;
     console.log("Added section text: ", newObjAux);
+    return newObjAux;
+  });
+};
+
+export const setActors = (selectedActorsPayload) => {
+  setGlobalState('entries', (oldEntries) => {
+    const newObjAux = { ...oldEntries };
+    newObjAux[selectedActorsPayload.entryId].meta.actors = selectedActorsPayload.actors;
     return newObjAux;
   });
 };

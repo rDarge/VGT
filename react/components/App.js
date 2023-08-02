@@ -15,6 +15,7 @@ import {
   addNewSection,
   deleteSection,
   deleteAllEntries,
+  setActors,
 } from './state';
 
 const App = () => {
@@ -45,6 +46,9 @@ const App = () => {
     ipcRenderer.on('addText', (e, newText) => {
       addText(newText);
     });
+    ipcRenderer.on('updatedActors', (e, selectedActorsPayload) => {
+      setActors(selectedActorsPayload)
+    })
     ipcRenderer.on('addSectionText', (e, newText) => {
       addSectionText(newText);
     })
