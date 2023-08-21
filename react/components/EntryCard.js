@@ -1,7 +1,7 @@
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, nativeImage } = require('electron');
 import React, { useState, useRef } from 'react';
 import { Button, Card, Row, Col, Image, Input, Select, Space, Divider } from 'antd';
-import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, FullscreenExitOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, ScanOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, FullscreenExitOutlined, PlusOutlined, TranslationOutlined } from '@ant-design/icons';
 import TranslationCard from './TranslationCard';
 import RawTextCard from './RawTextCard';
 import StickyText from './StickyText';
@@ -96,6 +96,44 @@ const EntryCard = ({ entry, config }) => {
     }
   }
 
+  const onTranslate = (entryId, sectionIndex) => {
+    if(sectionIndex > 0) {
+      const section = entry.meta.sections[sectionIndex-1];
+      console.log("The current text is ", section.text);
+
+      //Resize image to 256x256
+      const image = document.createElement('img');
+      image.src = section.img;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { alpha: false});
+      canvas.width = 256;
+      canvas.height = 256;
+      ctx.drawImage(image, 0, 0, 256, 256);
+      const dataUrl = canvas.toDataURL();
+      console.log("The resized image is ", dataUrl);
+
+      //Center-crop image at 224 x 224
+      const croppedData = ctx.getImageData(16,16,224,224);
+
+      //Extract from resized canvas
+      ctx.height = 224;
+      ctx.width = 224;
+      canvas.height = 224;
+      canvas.width = 224;
+      ctx.putImageData(croppedData, 0, 0);
+      const croppedUrl = canvas.toDataURL();
+      console.log("The cropped image is ", croppedUrl);
+      
+      let tensorData = croppedData.data.filter((_, index) => (index + 1) % 4);
+      tensorData = new Float32Array(tensorData).map(v => v / 255);
+      console.log("The cropped data is ", tensorData);
+
+      
+      ipcRenderer.send("localTranslate", {entryId: entryId, sectionId: section.id, tensorData: tensorData});
+    }
+    
+  }
+
   return (
     <Card
       bordered={false}
@@ -182,6 +220,7 @@ const EntryCard = ({ entry, config }) => {
                           <ZoomInOutlined disabled={scale === 50} onClick={onZoomIn} />
                           <DeleteOutlined disabled={current === 0} onClick={() => onDeleteFromPreview(current - 1)} />
                           <FullscreenExitOutlined onClick={() => setMinimizeToolbar(true)} />
+                          <TranslationOutlined onClick={() => onTranslate(entry.id, current)} disabled={current === 0} />
                           <Select
                             popupClassName='preview-popup'
                             style={{ width: 300 }}

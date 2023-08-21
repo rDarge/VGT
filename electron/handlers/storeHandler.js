@@ -1,6 +1,10 @@
 const { BrowserWindow } = require('electron');
 const { addImgToProcess, addTextToTraduction } = require('./queueHandler');
 const EventEmitter = require('events');
+const ort = require('onnxruntime-node');
+// import * as ort from 'onnxruntime-node'
+
+
 
 /**
  * TODO this is stale
@@ -56,7 +60,6 @@ function updateItemTextById(textObj) {
 function updateSectionTextById(textObj) {
   const entry = items[textObj.entryId];
   entry.meta.sections.filter(section => section.id === textObj.id)[0].text = textObj.text;
-  console.log("maybe cant be sent to front", textObj);
   sendToFront('addSectionText', textObj);
 
   //Also update top level text to reflect the change in this section
@@ -126,6 +129,28 @@ function addTraductionToImg(tradObj) {
   sendToFront('addTrad', tradObj);
 }
 
+async function localTranslate(localTranslatePayload) {
+  const entryId = localTranslatePayload.entryId;
+  const sectionId = localTranslatePayload.sectionId;
+  const section = items[entryId]['meta']['sections'].filter(section => section.id === sectionId)[0];
+  console.log('Attempting to perform local translation of image');
+  const input_data = new ort.Tensor("float32", new Float32Array(localTranslatePayload.tensorData), [
+    1,
+    3, 
+    224,
+    224,
+  ]);
+  console.log('input data is of size', input_data.dims);
+
+  const session = await ort.InferenceSession.create('./assets/onnx/encoder_model.onnx');
+  console.log(session);
+  const feeds = { pixel_values: input_data}
+  console.log(feeds);
+  const results = await session.run(feeds);
+  console.log("results are", results);
+
+}
+
 function sendToFront(message, object) { 
   BrowserWindow.getAllWindows().forEach((win) => {
     if (win.title === 'Visual-GPT-Translator') {
@@ -153,4 +178,5 @@ module.exports = {
   updateSectionTextById,
   deleteSectionById,
   setSelectedActors,
+  localTranslate,
 };

@@ -1,5 +1,5 @@
 const { ipcMain, screen, desktopCapturer, BrowserWindow } = require('electron');
-const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById, cleanAll, setSelectedActors } = require('./storeHandler');
+const { addNewEntry, deleteItemById, updateItemTextById, translateItemById, scanItemById, appendCaptureToEntry, updateSectionTextById, deleteSectionById, cleanAll, setSelectedActors, localTranslate } = require('./storeHandler');
 const uuid = require('uuid');
 const {
   getFullConfigs,
@@ -142,6 +142,9 @@ function ipcHandler() {
   });
   ipcMain.on('setSelectedActors', (_e, selectedActorsPayload) => {
     setSelectedActors(selectedActorsPayload);
+  });
+  ipcMain.on('localTranslate', (_e, localTranslatePayload) => {
+    localTranslate(localTranslatePayload);
   })
 
   /*

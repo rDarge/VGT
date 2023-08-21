@@ -72,3 +72,7 @@ When ElectronJS is started, it takes care of running the server as a child proce
 
 ##### Media:
 ![test](https://github.com/K-RT-Dev/VGT/blob/master/media/a.gif)
+
+
+# Onnx
+Place the onnx exported manga-ocr model in /assets/onnx 

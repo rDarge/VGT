@@ -8,7 +8,7 @@
   "scripts": {
     "electron-dev": "cross-env NODE_ENV=development concurrently \"webpack serve --config webpack.dev.config.js\"  \"electron .\"",
     "electron-build": "webpack --config webpack.prod.config.js",
-    "electron-run-build": "electron .",   
+    "electron-run-build": "electron .",
     "package": "electron-packager ./ --out=./release-builds --overwrite --ignore=\"^(/backend|/react)\""
   },
   "devDependencies": {
@@ -36,6 +36,7 @@
     "axios": "1.3.4",
     "cross-spawn": "7.0.3",
     "electron-store": "8.1.0",
+    "onnxruntime-node": "^1.15.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-hooks-global-state": "2.1.0",
