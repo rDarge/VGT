@@ -147,7 +147,19 @@ async function localTranslate(localTranslatePayload) {
   const feeds = { pixel_values: input_data}
   console.log(feeds);
   const results = await session.run(feeds);
-  console.log("results are", results);
+  console.log("results are", results, );
+
+  const decoderSession = await ort.InferenceSession.create('./assets/onnx/decoder_model.onnx');
+  console.log(decoderSession);
+  const input_ids = new ort.Tensor("int64", new BigInt64Array([0n,0n,0n,0n]), [
+    2,
+    1
+  ]);
+  const nextInput = {input_ids:input_ids, encoder_hidden_states: results.last_hidden_state};
+  console.log("Next input is", nextInput);
+  const decodedResults = await decoderSession.run(nextInput);
+  console.log("decoded results are", decodedResults);
+  console.log("data is ", decodedResults.logits.data);
 
 }
 
