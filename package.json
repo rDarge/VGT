@@ -9,7 +9,9 @@
     "electron-dev": "cross-env NODE_ENV=development concurrently \"webpack serve --config webpack.dev.config.js\"  \"electron .\"",
     "electron-build": "webpack --config webpack.prod.config.js",
     "electron-run-build": "electron .",
-    "package": "electron-packager ./ --out=./release-builds --overwrite --ignore=\"^(/backend|/react)\""
+    "package": "electron-packager ./ --out=./release-builds --overwrite --ignore=\"^(/backend|/react)\"",
+    "test-ocr": "node onnxrunner.js",
+    "test-detect": "node onnxrunner2.js"
   },
   "devDependencies": {
     "@babel/core": "7.21.3",
