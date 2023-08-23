@@ -124,8 +124,40 @@ const EntryCard = ({ entry, config }) => {
       const croppedUrl = canvas.toDataURL();
       console.log("The cropped image is ", croppedUrl);
       
+      //Remove alpha channel
       let tensorData = croppedData.data.filter((_, index) => (index + 1) % 4);
-      tensorData = new Float32Array(tensorData).map(v => v / 255);
+
+      //Align data according to channel
+      // const roffset = 0;        //0-50175
+      // const goffset = 224*224;  //50176-100351
+      // const boffset = 2*224*224 //100352-150527
+
+      // for(let i = 0; i < tensorData.length/3; i+=3) {
+      //   const redSectorGreen = tensorData[i+1];
+      //   const redSectorBlue = tensorData[i+2];
+      //   const greenSectorRed = tensorData[goffset+i];
+      //   const blueSectorRed = tensorData[boffset+i];
+
+      //   tensorData[i+1] = greenSectorRed;
+      //   tensorData[i+2] = blueSectorRed;
+      //   tensorData[goffset+i] = redSectorGreen;
+      //   tensorData[goffset+i] = redSectorBlue;
+      // }
+
+      const r = [];
+      const g = [];
+      const b = [];
+      const normalize = v => ((v / 255) * 2) - 1;
+      for(let i = 0; i < tensorData.length; i+=3) {
+        r.push(normalize(tensorData[i]));
+        g.push(normalize(tensorData[i+1]));
+        b.push(normalize(tensorData[i+2]));
+      }
+      tensorData = [...r, ...g, ...b];
+      
+      //Normalization from Transformer: image = (image - image_mean) / image_std
+      //image_mean is 0.5, image_std is 0.5
+      tensorData = new Float32Array(tensorData);
       console.log("The cropped data is ", tensorData);
 
       

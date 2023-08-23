@@ -2,6 +2,7 @@ const { BrowserWindow } = require('electron');
 const { addImgToProcess, addTextToTraduction } = require('./queueHandler');
 const EventEmitter = require('events');
 const ort = require('onnxruntime-node');
+const fs = require('fs');
 // import * as ort from 'onnxruntime-node'
 
 
@@ -130,6 +131,12 @@ function addTraductionToImg(tradObj) {
 }
 
 async function localTranslate(localTranslatePayload) {
+
+  const filename = localTranslatePayload.entryId + "-" + localTranslatePayload.sectionId + ".csv";
+  const tensorData = localTranslatePayload.tensorData.join(',');
+  fs.writeFileSync("C:/tmp/" + filename, tensorData)
+
+  //ENCODER ============================ 
   const entryId = localTranslatePayload.entryId;
   const sectionId = localTranslatePayload.sectionId;
   const section = items[entryId]['meta']['sections'].filter(section => section.id === sectionId)[0];
@@ -144,22 +151,85 @@ async function localTranslate(localTranslatePayload) {
 
   const session = await ort.InferenceSession.create('./assets/onnx/encoder_model.onnx');
   console.log(session);
+  console.log("input names", session.inputNames);
+  console.log("output names", session.outputNames);
   const feeds = { pixel_values: input_data}
-  console.log(feeds);
+  // console.log(feeds);
   const results = await session.run(feeds);
-  console.log("results are", results, );
+  // console.log("results are", results, );
 
+  //DECODER ============================
   const decoderSession = await ort.InferenceSession.create('./assets/onnx/decoder_model.onnx');
   console.log(decoderSession);
-  const input_ids = new ort.Tensor("int64", new BigInt64Array([0n,0n,0n,0n]), [
-    2,
+  console.log("input names", decoderSession.inputNames);
+  console.log("output names", decoderSession.outputNames);
+  const input_array = new BigInt64Array(1);
+
+    //Get corresponding vocab
+    const vocab = fs.readFileSync('./assets/onnx/vocab.txt', {encoding: 'utf-8'}).split('\r\n')
+  
+  // Initializing as 1s doesn't seem to work
+  input_array.fill(2n);
+  // Trying with random values
+  // for (let i = 0; i < input_array.length; i++) {
+  //   const hexString = Array(16)
+  //     .fill()
+  //     .map(() => Math.round(Math.random() * 0xF).toString(16))
+  //     .join('');
+  //   input_array[i] = BigInt(`0x${hexString}`);
+  // }
+  // Got this error on above attempt: 
+  //    [E:onnxruntime:, sequential_executor.cc:514 onnxruntime::ExecuteKernel] 
+  //    Non-zero status code returned while running Gather node. 
+  //    Name:'/decoder/bert/embeddings/word_embeddings/Gather'
+  //    Status Message: indices element out of data bounds, 
+  //    idx=-3947328286008448111 must be within the inclusive range [-6144,6143]
+  // What if we initialize linearly within those bounds? 
+  // for (let i = 0; i < input_array.length; i++) {
+  //   input_array[2*i] = BigInt(i);
+  //   input_array[2*i+1] = BigInt(1n);//vocab[i];
+  // }
+
+  const input_ids = new ort.Tensor("int64", input_array, [
+    1,
     1
   ]);
   const nextInput = {input_ids:input_ids, encoder_hidden_states: results.last_hidden_state};
-  console.log("Next input is", nextInput);
+  // console.log("Next input is", nextInput);
   const decodedResults = await decoderSession.run(nextInput);
-  console.log("decoded results are", decodedResults);
-  console.log("data is ", decodedResults.logits.data);
+  // console.log("decoded results are", decodedResults);
+  // console.log("data is ", decodedResults.logits.data);
+
+  //SOFTMAX RESULTS
+  const logits = decodedResults.logits.data;
+  const softmax = [];
+  let currentIndex = 0
+  let currentValue = logits[0];
+  for(let i = 1; i < logits.length; i += 1) {
+    if(i % 6144 == 0) {
+      softmax.push(currentIndex % 6144 + 1);
+      currentIndex = i;
+      currentValue = logits[i];
+    } else if(currentValue < logits[i]) {
+      currentIndex = i;
+      currentValue = logits[i];
+    }
+  }
+  softmax.push(currentIndex % 6144 + 1);
+
+  //Mostly 4s, plus occasional 
+  console.log("Logits are: ", softmax.filter(val => val !== 4));
+
+
+  console.log(vocab);
+  // const rl = readline.createInterface({input: fileStream})
+  // const vocab = [];
+  // for await(const line of rl) {
+  //   console.log(line);
+  //   vocab.push(line);
+  // }
+  console.log("Final output", softmax.map(idx => vocab[idx]).join(''));
+
 
 }
 
